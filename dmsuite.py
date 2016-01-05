@@ -772,7 +772,7 @@ def cheb2bc(ncheb, bcs, **kwargs):
         # compute phi'_-,phi''_-
         phim1 = xkcol*dd1[1:ncheb, ncheb-1]+dd0[1:ncheb, ncheb-1]
         phim2 = xkcol*dd2[1:ncheb, ncheb-1]+2.*dd1[1:ncheb, ncheb-1]
-        phim = ccn*np.vstack((phim1, phim2)).T/aan
+        phim = ccn*np.vstack((phim1, phim2)).T/bbn
 
         # node vector
         xxt = xxx[1:ncheb]
