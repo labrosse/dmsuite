@@ -1,3 +1,4 @@
+[![Code Health](https://landscape.io/github/labrosse/dmsuite/master/landscape.svg?style=flat)](https://landscape.io/github/labrosse/dmsuite/master)
 # dmsuite
 A collection of spectral collocation differentiation matrices
 
