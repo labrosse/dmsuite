@@ -197,7 +197,7 @@ def poldif(*arg):
 
     return DM
 
-def chebdif(N, M, **kwargs):
+def chebdif(N, M):
     """
     Calculate differentiation matrices using Chebyshev collocation.
 
@@ -213,8 +213,6 @@ def chebdif(N, M, **kwargs):
 
     M   : int
           maximum order of the derivative, 0 < M <= N - 1
-
-    outputx : kwarg of boolean value controlling whether x is returned or not
 
     Returns
     -------
@@ -290,18 +288,10 @@ def chebdif(N, M, **kwargs):
     if M <= 0:
         raise Exception('derivative order must be at least 1')
 
-    outx = False
-    if kwargs != {}:
-        for key, value in kwargs.iteritems():
-            if key == 'outputx':
-                outx = value
-            else:
-                print "kwarg value not understood %s == %s" %(key, value)
-                print "ignored"
-
     DM = np.zeros((M, N, N))
-
-    n1 = N/2; n2 = int(round(N/2.))     # indices used for flipping trick
+    # indices used for flipping trick
+    nn1 = np.int(np.floor((N)/2.))
+    nn2 = np.int(np.ceil((N)/2.))
     k = np.arange(N)                    # compute theta vector
     th = k*np.pi/(N-1)
 
@@ -314,7 +304,7 @@ def chebdif(N, M, **kwargs):
     # Assemble the differentiation matrices
     T = np.tile(th/2, (N, 1))
     DX = 2*np.sin(T.T+T)*np.sin(T.T-T)               # trigonometric identity
-    DX[n1:, :] = -np.flipud(np.fliplr(DX[0:n2, :]))    # flipping trick
+    DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))    # flipping trick
     DX[range(N), range(N)] = 1.                         # diagonals of D
     DX = DX.T
 
@@ -334,10 +324,7 @@ def chebdif(N, M, **kwargs):
         D[range(N), range(N)] = -np.sum(D, axis=1)        # negative sum trick
         DM[ell, :, :] = D                                # store current D in DM
 
-    if outx:
-        return x, DM
-    else:
-        return DM
+    return x, DM
 
 def herdif(N, M, b):
     """
@@ -635,7 +622,7 @@ def fourdif(nfou, mder):
 def sincdif():
     pass
 
-def cheb2bc(ncheb, bcs, **kwargs):
+def cheb2bc(ncheb, bcs):
     """
     First and second derivative matrices with general boundary conditions
 
@@ -646,7 +633,6 @@ def cheb2bc(ncheb, bcs, **kwargs):
     INPUT
     ncheb   =  number of Chebyshev points in [-1,1]
     bcs       =  boundary condition matrix = [[a_1, b_1, c_1], [a_N, b_N, c_N]]
-    outputx = boolean to control whether to output the Chebyshev points
 
     OUTPUT
     xt       =  Chebyshev points corresponding to rows and columns
@@ -661,17 +647,9 @@ def cheb2bc(ncheb, bcs, **kwargs):
     Based on the matlab code of
     S.C. Reddy, J.A.C. Weideman  1998
     """
-    outx = False
-    if kwargs != {}:
-        for key, value in kwargs.iteritems():
-            if key == 'outputx':
-                outx = value
-            else:
-                print "kwarg value not understood %s == %s" %(key, value)
-                print "ignored"
 
     # Get differentiation matrices
-    xxx, ddm = chebdif(ncheb, 2, outputx=True)
+    xxx, ddm = chebdif(ncheb, 2)
     dd0 = np.eye(ncheb, ncheb)
     dd1 = ddm[0, :, :]
     dd2 = ddm[1, :, :]
@@ -832,12 +810,9 @@ def cheb2bc(ncheb, bcs, **kwargs):
         # node vector
         xxt = xxx
 
-    if outx:
-        return xxt, d2t, d1t, phip, phim
-    else:
-        return d2t, d1t, phip, phim
+    return xxt, d2t, d1t, phip, phim
 
-def cheb4c(ncheb, **kwargs):
+def cheb4c(ncheb):
     """
     Fourth derivative matrix with clamped BCs
 
@@ -848,8 +823,6 @@ def cheb4c(ncheb, **kwargs):
     Input:
     N:     N-2 = Order of differentiation matrix.
     (The interpolant has degree N+1.)
-
-    outputx : kwarg of boolean value controlling whether x is returned or not
 
     Output:
     x:      Interior Chebyshev points (vector of length N-2)
@@ -868,15 +841,6 @@ def cheb4c(ncheb, **kwargs):
     """
     if ncheb <= 1:
         raise Exception('ncheb in cheb4c must be strictly greater than 1')
-
-    outx = False
-    if kwargs != {}:
-        for key, value in kwargs.iteritems():
-            if key == 'outputx':
-                outx = value
-            else:
-                print "kwarg value not understood %s == %s" %(key, value)
-                print "ignored"
 
     # initialize dd4
     dm4 = np.zeros((4, ncheb-2, ncheb-2))
@@ -942,10 +906,7 @@ def cheb4c(ncheb, **kwargs):
         # store in dm4
         dm4[ell, :, :] = dmat
     dd4 = dm4[3, :, :]
-    if outx:
-        return xch, dd4
-    else:
-        return dd4
+    return xch, dd4
 
 
 def polint():
@@ -1136,11 +1097,11 @@ def orrsom(ncheb, rey):
     from scipy import linalg
 
     # Compute second derivative
-    xxt, ddm = chebdif(ncheb+2, 2, outputx=True)
+    xxt, ddm = chebdif(ncheb+2, 2)
     # Enforce Dirichlet BCs
     dd2 = ddm[1, 1:ncheb+1, 1:ncheb+1]
     # Compute fourth derivative
-    xxt, dd4 = cheb4c(ncheb+2, outputx=True)
+    xxt, dd4 = cheb4c(ncheb+2)
     # identity matrix
     ieye = np.eye(dd4.shape[0])
 
