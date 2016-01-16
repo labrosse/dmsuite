@@ -74,7 +74,6 @@ Orr-Sommerfeld equation.
 """
 from __future__ import division
 import numpy as np
-from scipy import sparse
 from scipy.linalg import eig
 from scipy.linalg import toeplitz
 
@@ -197,39 +196,38 @@ def poldif(*arg):
 
     return DM
 
-def chebdif(N, M):
+def chebdif(ncheb, mder):
     """
     Calculate differentiation matrices using Chebyshev collocation.
 
-    Returns the differentiation matrices D1, D2, .. DM corresponding to the
-    M-th derivative of the function f, at the N Chebyshev nodes in the
+    Returns the differentiation matrices D1, D2, .. Dmder corresponding to the
+    mder-th derivative of the function f, at the ncheb Chebyshev nodes in the
     interval [-1,1].
 
     Parameters
     ----------
 
-    N   : int
-          number of grid points
+    ncheb : int, number of grid points
 
-    M   : int
-          maximum order of the derivative, 0 < M <= N - 1
+    mder   : int
+          maximum order of the derivative, 0 < mder <= ncheb - 1
 
     Returns
     -------
     x  : ndarray
-         N x 1 array of Chebyshev points
+         ncheb x 1 array of Chebyshev points
 
     DM : ndarray
-         M x N x N  array of differentiation matrices
+         mder x ncheb x ncheb  array of differentiation matrices
 
     Notes
     -----
-    This function returns  M differentiation matrices corresponding to the
-    1st, 2nd, ... M-th derivates on a Chebyshev grid of N points. The
-    matrices are constructed by differentiating N-th order Chebyshev
+    This function returns  mder differentiation matrices corresponding to the
+    1st, 2nd, ... mder-th derivates on a Chebyshev grid of ncheb points. The
+    matrices are constructed by differentiating ncheb-th order Chebyshev
     interpolants.
 
-    The M-th derivative of the grid function f is obtained by the matrix-
+    The mder-th derivative of the grid function f is obtained by the matrix-
     vector multiplication
 
     .. math::
@@ -271,9 +269,9 @@ def chebdif(N, M):
     approximation of the first two derivatives of y = f(x) can be obtained
     as
 
-    >>> N = 32; M = 2; pi = np.pi
+    >>> ncheb = 32; mder = 2; pi = np.pi
     >>> from pyddx.sc import dmsuite as dms
-    >>> x, D = dms.chebdif(N, M)        # first two derivatives
+    >>> x, D = dms.chebdif(ncheb, mder)        # first two derivatives
     >>> D1 = D[0,:,:]                   # first derivative
     >>> D2 = D[1,:,:]                   # second derivative
     >>> y = np.sin(2*pi*x)              # function at Chebyshev nodes
@@ -282,47 +280,60 @@ def chebdif(N, M):
     >>> legend(('$y$', '$y^{\prime}$', '$y^{\prime\prime}$'), loc='upper left')
     """
 
-    if M >= N:
-        raise Exception('number of nodes must be greater than M')
+    if mder >= ncheb:
+        raise Exception('number of nodes must be greater than mder')
 
-    if M <= 0:
+    if mder <= 0:
         raise Exception('derivative order must be at least 1')
 
-    DM = np.zeros((M, N, N))
+    DM = np.zeros((mder, ncheb, ncheb))
     # indices used for flipping trick
-    nn1 = np.int(np.floor((N)/2.))
-    nn2 = np.int(np.ceil((N)/2.))
-    k = np.arange(N)                    # compute theta vector
-    th = k*np.pi/(N-1)
+    nn1 = np.int(np.floor((ncheb)/2.))
+    nn2 = np.int(np.ceil((ncheb)/2.))
+    k = np.arange(ncheb)
+    # compute theta vector
+    th = k*np.pi/(ncheb-1)
 
     # Compute the Chebyshev points
 
-    #x = np.cos(np.pi*np.linspace(N-1,0,N)/(N-1))                # obvious way
-    x = np.sin(np.pi*((N-1)-2*np.linspace(N-1, 0, N))/(2*(N-1)))   # W&R way
+    # obvious way
+    #x = np.cos(np.pi*np.linspace(ncheb-1,0,ncheb)/(ncheb-1))
+    # W&R way
+    x = np.sin(np.pi*((ncheb-1)-2*np.linspace(ncheb-1, 0, ncheb))/(2*(ncheb-1)))
     x = x[::-1]
 
     # Assemble the differentiation matrices
-    T = np.tile(th/2, (N, 1))
-    DX = 2*np.sin(T.T+T)*np.sin(T.T-T)               # trigonometric identity
-    DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))    # flipping trick
-    DX[range(N), range(N)] = 1.                         # diagonals of D
+    T = np.tile(th/2, (ncheb, 1))
+    # trigonometric identity
+    DX = 2*np.sin(T.T+T)*np.sin(T.T-T)
+    # flipping trick
+    DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))
+    # diagonals of D
+    DX[range(ncheb), range(ncheb)] = 1.
     DX = DX.T
 
-    C = toeplitz((-1.)**k)           # matrix with entries c(k)/c(j)
+    # matrix with entries c(k)/c(j)
+    C = toeplitz((-1.)**k)
     C[0, :] *= 2
     C[-1, :] *= 2
     C[:, 0] *= 0.5
     C[:, -1] *= 0.5
 
-    Z = 1./DX                        # Z contains entries 1/(x(k)-x(j))
-    Z[range(N), range(N)] = 0.        # with zeros on the diagonal.
+    # Z contains entries 1/(x(k)-x(j))
+    Z = 1./DX
+    # with zeros on the diagonal.
+    Z[range(ncheb), range(ncheb)] = 0.
 
-    D = np.eye(N)                    # D contains differentiation matrices.
+    # initialize differentiation matrices.
+    D = np.eye(ncheb)
 
-    for ell in range(M):
-        D = (ell+1)*Z*(C*np.tile(np.diag(D), (N, 1)).T - D)      # off-diagonals
-        D[range(N), range(N)] = -np.sum(D, axis=1)        # negative sum trick
-        DM[ell, :, :] = D                                # store current D in DM
+    for ell in range(mder):
+        # off-diagonals
+        D = (ell+1)*Z*(C*np.tile(np.diag(D), (ncheb, 1)).T - D)
+        # negative sum trick
+        D[range(ncheb), range(ncheb)] = -np.sum(D, axis=1)
+        # store current D in DM
+        DM[ell, :, :] = D
 
     return x, DM
 
@@ -1010,8 +1021,8 @@ def lagroots(N):
     d = np.arange(1, N)
     J = np.diag(d0) - np.diag(d, 1) - np.diag(d, -1)
 
-    # compute eigenvectors and eigenvalues
-    mu, v = eig(J)
+    # compute eigenvalues
+    mu = eig(J)[0]
 
     # return sorted, normalised eigenvalues
     return np.sort(mu)
@@ -1037,8 +1048,8 @@ def herroots(N):
     d = np.sqrt(np.arange(1, N))
     J = np.diag(d, 1) + np.diag(d, -1)
 
-    # compute eigenvectors and eigenvalues
-    mu, v = eig(J)
+    # compute eigenvalues
+    mu = eig(J)[0]
 
     # return sorted, normalised eigenvalues
     return np.sort(mu)/np.sqrt(2)
@@ -1061,7 +1072,7 @@ def sineg():
 def sgrhs():
     pass
 
-def schrod(nlag, blag):
+def schrod():#(nlag, blag):
     """
     First eigenvalue of the Schrodinger equation on the half-line
 
