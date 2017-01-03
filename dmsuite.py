@@ -666,12 +666,12 @@ def cheb2bc(ncheb, bcs):
     dd2 = ddm[1, :, :]
 
     # extract boundary condition coefficients
-    aa1 = bcs[0, 0]
-    bb1 = bcs[0, 1]
-    cc1 = bcs[0, 2]
-    aan = bcs[1, 0]
-    bbn = bcs[1, 1]
-    ccn = bcs[1, 2]
+    aa1 = bcs[0][0]
+    bb1 = bcs[0][1]
+    cc1 = bcs[0][2]
+    aan = bcs[1][0]
+    bbn = bcs[1][1]
+    ccn = bcs[1][2]
 
     if (aa1 == 0 and bb1 == 0) or (aan == 0 and bbn == 0):
         # Case 0: Invalid boundary condition information
