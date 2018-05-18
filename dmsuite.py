@@ -151,7 +151,7 @@ def poldif(*arg):
 
     """
     if len(arg) > 3:
-        raise Exception('numer of arguments are either two OR three')
+        raise Exception('number of arguments is either two OR three')
 
     if len(arg) == 2:
         # unit weight function : arguments are nodes and derivative order
