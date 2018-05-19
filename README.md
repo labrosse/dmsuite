@@ -12,3 +12,8 @@ Suite, ACM Transactions on Mathematical Software, 26, (2000) :
 
 The port to python was initiated as part of a larger project by
 ronojoy as https://github.com/ronojoy/pyddx.git
+
+It is [available on PyPI](https://pypi.org/project/dmsuite/). You can install
+and update dmsuite with the following command:
+
+    python3 -m pip install --user -U dmsuite
