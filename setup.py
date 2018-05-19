@@ -1,5 +1,8 @@
 from setuptools import setup
 
+with open('README.rst') as rdm:
+    README = rdm.read()
+
 DEPENDENCIES = [
     'numpy>=1.12',
     'scipy>=1.0',
@@ -10,6 +13,7 @@ setup(
     use_scm_version=True,
 
     description='Differenciation matrices',
+    long_description=README,
 
     author='Adrien Morison, Stéphane Labrosse',
     author_email='stephane.labrosse@ens-lyon.fr',
