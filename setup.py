@@ -24,5 +24,6 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
 
+    py_modules=['dmsuite'],
     install_requires=DEPENDENCIES,
 )
