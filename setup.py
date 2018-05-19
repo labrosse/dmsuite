@@ -15,6 +15,7 @@ setup(
     description='Differenciation matrices',
     long_description=README,
 
+    url='https://github.com/labrosse/dmsuite',
     author='Adrien Morison, Stéphane Labrosse',
     author_email='stephane.labrosse@ens-lyon.fr',
 
