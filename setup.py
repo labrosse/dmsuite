@@ -7,7 +7,7 @@ DEPENDENCIES = [
 
 setup(
     name='dmsuite',
-    version='0.0.1',
+    use_scm_version=True,
 
     description='Differenciation matrices',
 
