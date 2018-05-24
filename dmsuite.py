@@ -410,14 +410,14 @@ def herdif(N, M, b):
     >>> legend(('$y$', '$y^{\prime}$', '$y^{\prime\prime}$'), loc='upper left')
     """
     if M >= N - 1:
-        raise Exception('numer of nodes must be greater than M - 1')
+        raise Exception('number of nodes must be greater than M - 1')
 
     if M <= 0:
         raise Exception('derivative order must be at least 1')
 
 
     x = herroots(N)                   # compute Hermite nodes
-    alpha = np.exp(-x*x/2)            # compute Hermite  weights.
+    alpha = np.exp(-x * x / 2)            # compute Hermite  weights.
 
     beta = np.zeros([M + 1, N])
 
@@ -426,20 +426,19 @@ def herdif(N, M, b):
     beta[1, :] = -x
 
     for ell in range(2, M + 1):
-        beta[ell, :] = -x*beta[ell-1, :]-(ell-2)*beta[ell-2, :]
+        beta[ell, :] = -x*beta[ell-1, :]-(ell-1)*beta[ell-2, :]
 
     # remove initialising row from beta
     beta = np.delete(beta, 0, 0)
 
     # compute differentiation matrix (b=1)
     DM = poldif(x, alpha, beta)
-
     # scale nodes by the factor b
     x = x/b
 
     # scale the matrix by the factor b
     for ell in range(M):
-        DM[ell, :, :] = (b^(ell+1))*DM[ell, :, :]
+        DM[ell, :, :] = (b**(ell+1))*DM[ell, :, :]
 
     return x, DM
 
@@ -1051,7 +1050,8 @@ def herroots(N):
     mu = eig(J)[0]
 
     # return sorted, normalised eigenvalues
-    return np.sort(mu)/np.sqrt(2)
+    # real part only since all roots must be real.
+    return np.real(np.sort(mu)/np.sqrt(2))
 
 def cerfa():
     pass
