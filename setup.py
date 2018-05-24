@@ -1,5 +1,8 @@
 from setuptools import setup
 
+with open('README.rst') as rdm:
+    README = rdm.read()
+
 DEPENDENCIES = [
     'numpy>=1.12',
     'scipy>=1.0',
@@ -7,10 +10,12 @@ DEPENDENCIES = [
 
 setup(
     name='dmsuite',
-    version='0.0.1',
+    use_scm_version=True,
 
     description='Differenciation matrices',
+    long_description=README,
 
+    url='https://github.com/labrosse/dmsuite',
     author='Adrien Morison, Stéphane Labrosse',
     author_email='stephane.labrosse@ens-lyon.fr',
 
@@ -24,5 +29,6 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
 
+    py_modules=['dmsuite'],
     install_requires=DEPENDENCIES,
 )
