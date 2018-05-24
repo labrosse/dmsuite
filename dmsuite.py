@@ -549,7 +549,6 @@ def fourdif(nfou, mder):
     """
     Fourier spectral differentiation.
 
-    
     Spectral differentiation matrix on a grid with nfou equispaced points in [0,2pi)
 
     INPUT
@@ -614,7 +613,7 @@ def fourdif(nfou, mder):
             col1 = col1*np.hstack((topc, -np.flipud(topc[0:nn1])))
             col1 = np.hstack(([-np.pi**2/3/dhh**2+1/12], col1))
         # first row
-        row1 = col1 
+        row1 = col1
 
     else:
         # employ FFT to compute 1st column of matrix for mder > 2
@@ -1084,7 +1083,7 @@ def schrod():#(nlag, blag):
     OUTPUT
     -------
     smallest eigenvalue
-    
+
     Uses a nlag x nlag Laguerre differentiation matrix
     J.A.C. Weideman, S.C. Reddy 1998.
     """
@@ -1103,7 +1102,7 @@ def orrsom(ncheb, rey):
 
     Returns
     -------
-    meig : Eigenvalue with largest real part  
+    meig : Eigenvalue with largest real part
     """
     from scipy import linalg
 
@@ -1124,4 +1123,3 @@ def orrsom(ncheb, rey):
     # Find eigenvalue of largest real part
     leig = np.argmax(np.real(eigv))
     return eigv[leig]
-
