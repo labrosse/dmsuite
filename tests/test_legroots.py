@@ -5,4 +5,4 @@ def test_chebdif4():
     """ Test of Legendre polynomials roots"""
     expected = np.load('tests/data/legroots10.npy')
     computed = dm.legroots(10)
-    assert np.all(computed == expected)
+    assert np.allclose(computed, expected)
