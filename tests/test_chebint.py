@@ -8,4 +8,4 @@ def test_chebint():
     fcheb = np.cos(np.pi * zcheb)
     zint = np.linspace(-1, 1, num=50)
     computed = dm.chebint(fcheb, zint)
-    assert np.all(computed == expected)
+    assert np.allclose(computed, expected)
