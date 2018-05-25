@@ -997,7 +997,7 @@ def legroots(N):
 
     mu, v = eig(J)
 
-    return np.sort(mu)
+    return np.real(np.sort(mu))
 
 def lagroots(N):
     """
@@ -1023,7 +1023,7 @@ def lagroots(N):
     mu = eig(J)[0]
 
     # return sorted, normalised eigenvalues
-    return np.sort(mu)
+    return np.real(np.sort(mu))
 
 def herroots(N):
     """
