@@ -675,7 +675,7 @@ def cheb2bc(ncheb, bcs):
     aan = bcs[1][0]
     bbn = bcs[1][1]
     ccn = bcs[1][2]
-
+    
     if (aa1 == 0 and bb1 == 0) or (aan == 0 and bbn == 0):
         # Case 0: Invalid boundary condition information
         raise Exception('Invalid boundary condition information (no output)')
@@ -690,7 +690,7 @@ def cheb2bc(ncheb, bcs):
         phim = ccn*np.vstack((dd1[1:ncheb-1, ncheb-1],
                               dd2[1:ncheb-1, ncheb-1])).T/aan
         # node vector
-        xxt = xxx[1:ncheb-2]
+        xxt = xxx[1:ncheb-1]
 
     elif bb1 != 0 and bbn == 0:
         # Case 2: Dirichlet x=-1, Robin x=1
