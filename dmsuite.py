@@ -18,6 +18,8 @@ authors describe their library as:
  initial value problems arising in the fields of special functions,
  quantum mechanics, nonlinear waves, and hydrodynamic stability."
 
+The port to python was initiated as part of a larger project by ronojoy as https://github.com/ronojoy/pyddx.git
+
 The summary of the Numpy functions, named exactly as the original DMSuite
 functions :
 
@@ -157,6 +159,9 @@ def poldif(*arg):
         # unit weight function : arguments are nodes and derivative order
         x, M = arg[0], arg[1]
         N = np.size(x)
+        # assert M<N, "Derivative order cannot be larger or equal to number of points"
+        if M >= N:
+            raise Exception("Derivative order cannot be larger or equal to number of points")
         alpha = np.ones(N)
         B = np.zeros((M, N))
 
