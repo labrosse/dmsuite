@@ -212,7 +212,7 @@ def chebdif(ncheb, mder):
     Parameters
     ----------
 
-    ncheb : int, number of grid points
+    ncheb : int, polynomial order. ncheb + 1 collocation points
 
     mder   : int
           maximum order of the derivative, 0 < mder <= ncheb - 1
@@ -220,7 +220,7 @@ def chebdif(ncheb, mder):
     Returns
     -------
     x  : ndarray
-         ncheb x 1 array of Chebyshev points
+         (ncheb + 1) x 1 array of Chebyshev points
 
     DM : ndarray
          mder x ncheb x ncheb  array of differentiation matrices
@@ -298,36 +298,36 @@ def chebdif(ncheb, mder):
     >>> plt.show()
     """
 
-    if mder >= ncheb:
+    if mder >= ncheb + 1:
         raise Exception('number of nodes must be greater than mder')
 
     if mder <= 0:
         raise Exception('derivative order must be at least 1')
 
-    DM = np.zeros((mder, ncheb, ncheb))
+    DM = np.zeros((mder, ncheb + 1, ncheb + 1))
     # indices used for flipping trick
-    nn1 = np.int(np.floor((ncheb)/2.))
-    nn2 = np.int(np.ceil((ncheb)/2.))
-    k = np.arange(ncheb)
+    nn1 = np.int(np.floor((ncheb + 1) / 2))
+    nn2 = np.int(np.ceil((ncheb + 1) / 2))
+    k = np.arange(ncheb+1)
     # compute theta vector
-    th = k * np.pi / (ncheb - 1)
+    th = k * np.pi / ncheb
 
     # Compute the Chebyshev points
 
     # obvious way
     #x = np.cos(np.pi*np.linspace(ncheb-1,0,ncheb)/(ncheb-1))
     # W&R way
-    x = np.sin(np.pi*((ncheb-1)-2*np.linspace(ncheb-1, 0, ncheb))/(2*(ncheb-1)))
+    x = np.sin(np.pi*(ncheb - 2 * np.linspace(ncheb, 0, ncheb + 1))/(2 * ncheb))
     x = x[::-1]
 
     # Assemble the differentiation matrices
-    T = np.tile(th/2, (ncheb, 1))
+    T = np.tile(th/2, (ncheb + 1, 1))
     # trigonometric identity
     DX = 2*np.sin(T.T+T)*np.sin(T.T-T)
     # flipping trick
     DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))
     # diagonals of D
-    DX[range(ncheb), range(ncheb)] = 1.
+    DX[range(ncheb + 1), range(ncheb + 1)] = 1.
     DX = DX.T
 
     # matrix with entries c(k)/c(j)
@@ -338,24 +338,24 @@ def chebdif(ncheb, mder):
     C[:, -1] *= 0.5
 
     # Z contains entries 1/(x(k)-x(j))
-    Z = 1./DX
+    Z = 1 / DX
     # with zeros on the diagonal.
-    Z[range(ncheb), range(ncheb)] = 0.
+    Z[range(ncheb + 1), range(ncheb + 1)] = 0.
 
     # initialize differentiation matrices.
-    D = np.eye(ncheb)
+    D = np.eye(ncheb + 1)
 
     for ell in range(mder):
         # off-diagonals
-        D = (ell+1)*Z*(C*np.tile(np.diag(D), (ncheb, 1)).T - D)
+        D = (ell + 1) * Z * (C * np.tile(np.diag(D), (ncheb + 1, 1)).T - D)
         # negative sum trick
-        D[range(ncheb), range(ncheb)] = -np.sum(D, axis=1)
+        D[range(ncheb + 1), range(ncheb + 1)] = -np.sum(D, axis=1)
         # store current D in DM
         DM[ell, :, :] = D
 
     return x, DM
 
-def herdif(N, M, b):
+def herdif(N, M, b=1):
     """
     Calculate differentiation matrices using Hermite collocation.
 
@@ -372,7 +372,7 @@ def herdif(N, M, b):
     M   : int
           maximum order of the derivative, 0 < M < N
 
-    b   : float
+    b   : float, optional
           scale parameter, real and positive
 
     Returns
@@ -409,23 +409,6 @@ def herdif(N, M, b):
     ..[3] R. Baltensperger and M. R. Trummer, Spectral Differencing With A
     Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
 
-    Examples
-    --------
-
-    The derivatives of functions is obtained by multiplying the vector of
-    function values by the differentiation matrix. The N-point Chebyshev
-    approximation of the first two derivatives of y = f(x) can be obtained
-    as
-
-    >>> N = 32; M = 2; pi = np.pi
-    >>> import dmsuite as dm
-    >>> x, D = dm.chebdif(N, M)        # first two derivatives
-    >>> D1 = D[0,:,:]                   # first derivative
-    >>> D2 = D[1,:,:]                   # second derivative
-    >>> y = np.sin(2*pi*x)              # function at Chebyshev nodes
-    >>> plot(x, y, 'r', x, D1.dot(y), 'g', x, D2.dot(y), 'b')
-    >>> xlabel('$x$'), ylabel('$y$, $y^{\prime}$, $y^{\prime\prime}$')
-    >>> legend(('$y$', '$y^{\prime}$', '$y^{\prime\prime}$'), loc='upper left')
     """
     if M >= N - 1:
         raise Exception('number of nodes must be greater than M - 1')
@@ -658,11 +641,11 @@ def cheb2bc(ncheb, bcs):
     a_N u(-1) + b_N u'(-1) = c_N
 
     INPUT
-    ncheb   =  number of Chebyshev points in [-1,1]
+    ncheb   =  Order of Chebyshev polynomials
     bcs       =  boundary condition matrix = [[a_1, b_1, c_1], [a_N, b_N, c_N]]
 
     OUTPUT
-    xt       =  Chebyshev points corresponding to rows and columns
+    xt       = ncheb+1 Chebyshev points corresponding to rows and columns
                  of D1t and D2t
     d1t      =  1st derivative matrix incorporating bc
     d2t      =  2nd derivative matrix incorporating bc
@@ -677,7 +660,7 @@ def cheb2bc(ncheb, bcs):
 
     # Get differentiation matrices
     xxx, ddm = chebdif(ncheb, 2)
-    dd0 = np.eye(ncheb, ncheb)
+    dd0 = np.eye(ncheb + 1, ncheb + 1)
     dd1 = ddm[0, :, :]
     dd2 = ddm[1, :, :]
 
@@ -695,144 +678,140 @@ def cheb2bc(ncheb, bcs):
 
     elif bb1 == 0 and bbn == 0:
         # case 1: Dirichlet/Dirichlet
-        d1t = dd1[1:ncheb-1, 1:ncheb-1]
-        d2t = dd2[1:ncheb-1, 1:ncheb-1]
+        d1t = dd1[1:ncheb, 1:ncheb]
+        d2t = dd2[1:ncheb, 1:ncheb]
         # phi_+
-        phip = cc1*np.vstack((dd1[1:ncheb-1, 0], dd2[1:ncheb-1, 0])).T/aa1
+        phip = cc1 * np.vstack((dd1[1:ncheb, 0], dd2[1:ncheb, 0])).T / aa1
         # phi_-
-        phim = ccn*np.vstack((dd1[1:ncheb-1, ncheb-1],
-                              dd2[1:ncheb-1, ncheb-1])).T/aan
+        phim = ccn * np.vstack((dd1[1:ncheb, ncheb],
+                              dd2[1:ncheb, ncheb])).T/aan
         # node vector
-        xxt = xxx[1:ncheb-1]
+        xxt = xxx[1:ncheb]
 
     elif bb1 != 0 and bbn == 0:
         # Case 2: Dirichlet x=-1, Robin x=1
         # 1-x_j, using trig identity
-        xjrow = 2.*(np.sin(np.pi/(2.*(ncheb-1))*
-                           np.arange(1, ncheb-1)))**2.
+        xjrow = 2 * (np.sin(np.pi / (2 * ncheb) * np.arange(1, ncheb))) ** 2
         # 1-x_k, using trig identity
-        xkcol = 2.*(np.sin(np.pi/(2.*(ncheb-1))*
-                           np.arange(ncheb-1)))**2.
+        xkcol = 2 * (np.sin(np.pi / (2 * ncheb) * np.arange(ncheb))) ** 2
         #  column of ones
         oner = np.ones(xkcol.shape)
 
         # matrix -1/(1-x_j)
-        fac0 = np.tensordot(oner, 1./xjrow, axes=0)
+        fac0 = np.tensordot(oner, 1 / xjrow, axes=0)
         # matrix (1-x_k)/(1-x_j)
-        fac1 = np.tensordot(xkcol, 1./xjrow, axes=0)
-        d1t = fac1*dd1[0:ncheb-1, 1:ncheb-1] - fac0*dd0[0:ncheb-1, 1:ncheb-1]
-        d2t = fac1*dd2[0:ncheb-1, 1:ncheb-1] - 2.*fac0*dd1[0:ncheb-1, 1:ncheb-1]
+        fac1 = np.tensordot(xkcol, 1 / xjrow, axes=0)
+        d1t = fac1 * dd1[0:ncheb, 1:ncheb] - fac0 * dd0[0:ncheb, 1:ncheb]
+        d2t = fac1 * dd2[0:ncheb, 1:ncheb] - 2 * fac0 * dd1[0:ncheb, 1:ncheb]
 
         # compute phi'_N, phi''_N
-        cfac = dd1[0, 0]+aa1/bb1
-        fcol1 = -cfac*dd0[0:ncheb-1, 0]+(1+cfac*xkcol)*dd1[0:ncheb-1, 0]
-        fcol2 = -2.*cfac*dd1[0:ncheb-1, 0]+(1+cfac*xkcol)*dd2[0:ncheb-1, 0]
+        cfac = dd1[0, 0] + aa1 / bb1
+        fcol1 = -cfac * dd0[0:ncheb, 0]+ (1 + cfac * xkcol) * dd1[0:ncheb, 0]
+        fcol2 = -2 * cfac * dd1[0:ncheb, 0] + (1 + cfac * xkcol)*dd2[0:ncheb, 0]
         d1t = np.vstack((fcol1, d1t.T)).T
         d2t = np.vstack((fcol2, d2t.T)).T
 
         # phi'_-, phi''_-
-        phim1 = xkcol*dd1[0:ncheb-1, ncheb-1]/2.-dd0[0:ncheb-1, ncheb-1]/2.
-        phim2 = xkcol*dd2[0:ncheb-1, ncheb-1]/2.-dd1[0:ncheb-1, ncheb-1]
-        phim = ccn*np.vstack((phim1, phim2)).T/aan
+        phim1 = xkcol * dd1[0:ncheb, ncheb] / 2 - dd0[0:ncheb, ncheb] / 2
+        phim2 = xkcol * dd2[0:ncheb, ncheb] / 2 - dd1[0:ncheb, ncheb]
+        phim = ccn * np.vstack((phim1, phim2)).T / aan
 
         # phi'_+, phi''_+
-        phip1 = -xkcol*dd1[0:ncheb-1, 0]+dd0[0:ncheb-1, 0]
-        phip2 = -xkcol*dd2[0:ncheb-1, 0]+2.*dd1[0:ncheb-1, 0]
-        phip = cc1*np.vstack((phip1, phip2)).T/bb1
+        phip1 = - xkcol * dd1[0:ncheb, 0] + dd0[0:ncheb, 0]
+        phip2 = - xkcol * dd2[0:ncheb, 0] + 2 * dd1[0:ncheb, 0]
+        phip = cc1 * np.vstack((phip1, phip2)).T / bb1
 
         # node vectors
-        xxt = xxx[0:ncheb-1]
+        xxt = xxx[0:ncheb]
 
     elif bb1 == 0. and bbn != 0:
         # Case 3: Dirichlet at x=1 and Neumann or Robin boundary x=-1.
 
         # 1+x_j, using trig identity
-        xjrow = 2.*(np.cos(np.pi/(2.*(ncheb-1))*
-                           np.arange(1., ncheb-1)))**2.
+        xjrow = 2 * (np.cos(np.pi / (2 * ncheb) * np.arange(1, ncheb))) ** 2
         # 1+x_k, using trig identity
-        xkcol = 2.*(np.cos(np.pi/(2.*(ncheb-1))*
-                           np.arange(1, ncheb)))**2.
+        xkcol = 2 * (np.cos(np.pi / (2 * ncheb) * np.arange(1, ncheb + 1))) ** 2
         # column of ones
         oner = np.ones(xkcol.shape)
 
         # matrix 1/(1+x_j)
-        fac0 = np.tensordot(oner, 1./xjrow, axes=0)
+        fac0 = np.tensordot(oner, 1 / xjrow, axes=0)
         # matrix (1+x_k)/(1+x_j)
-        fac1 = np.tensordot(xkcol, 1./xjrow, axes=0)
-        d1t = fac1*dd1[1:ncheb, 1:ncheb-1] + fac0*dd0[1:ncheb, 1:ncheb-1]
-        d2t = fac1*dd2[1:ncheb, 1:ncheb-1] + 2.*fac0*dd1[1:ncheb, 1:ncheb-1]
+        fac1 = np.tensordot(xkcol, 1 / xjrow, axes=0)
+        d1t = fac1 * dd1[1:ncheb + 1, 1:ncheb] + fac0*dd0[1:ncheb + 1, 1:ncheb]
+        d2t = fac1 * dd2[1:ncheb + 1, 1:ncheb] + 2.*fac0*dd1[1:ncheb + 1, 1:ncheb]
 
         # compute phi'_N, phi''_N
-        cfac = dd1[ncheb-1, ncheb-1]+aan/bbn
-        lcol1 = -cfac*dd0[1:ncheb, ncheb-1]+(1-cfac*xkcol)*dd1[1:ncheb, ncheb-1]
-        lcol2 = -2.*cfac*dd1[1:ncheb, ncheb-1]+(1-cfac*xkcol)*dd2[1:ncheb, ncheb-1]
+        cfac = dd1[ncheb, ncheb] + aan / bbn
+        lcol1 = - cfac * dd0[1:ncheb + 1, ncheb] + (1 - cfac * xkcol) * dd1[1:ncheb + 1, ncheb]
+        lcol2 = - 2 * cfac * dd1[1:ncheb + 1, ncheb]+(1 - cfac * xkcol) * dd2[1:ncheb + 1, ncheb]
         d1t = np.vstack((d1t.T, lcol1)).T
         d2t = np.vstack((d2t.T, lcol2)).T
 
         # compute phi'_+,phi''_+
-        phip1 = xkcol*dd1[1:ncheb, 0]/2.+dd0[1:ncheb, 0]
-        phip2 = xkcol*dd2[1:ncheb, 0]/2.+dd1[1:ncheb, 0]
-        phip = cc1*np.vstack((phip1, phip2)).T/aa1
+        phip1 = xkcol * dd1[1:ncheb + 1, 0] / 2 + dd0[1:ncheb + 1, 0]
+        phip2 = xkcol * dd2[1:ncheb + 1, 0] / 2 + dd1[1:ncheb + 1, 0]
+        phip = cc1 * np.vstack((phip1, phip2)).T / aa1
 
         # compute phi'_-,phi''_-
-        phim1 = xkcol*dd1[1:ncheb, ncheb-1]+dd0[1:ncheb, ncheb-1]
-        phim2 = xkcol*dd2[1:ncheb, ncheb-1]+2.*dd1[1:ncheb, ncheb-1]
-        phim = ccn*np.vstack((phim1, phim2)).T/bbn
+        phim1 = xkcol * dd1[1:ncheb + 1, ncheb] + dd0[1:ncheb + 1, ncheb]
+        phim2 = xkcol * dd2[1:ncheb + 1, ncheb] + 2 * dd1[1:ncheb + 1, ncheb]
+        phim = ccn * np.vstack((phim1, phim2)).T / bbn
 
         # node vector
-        xxt = xxx[1:ncheb]
+        xxt = xxx[1:ncheb + 1]
 
     elif bb1 != 0 and bbn != 0:
         # Case 4: Neumann or Robin boundary conditions at both endpoints.
 
         # 1-x_k^2 using trig identity
-        xkcol0 = (np.sin(np.pi*np.arange(ncheb)/(ncheb-1)))**2.
+        xkcol0 = (np.sin(np.pi * np.arange(ncheb + 1) / ncheb)) ** 2
         # -2*x_k
-        xkcol1 = -2*xxx[0:ncheb]
+        xkcol1 = - 2 * xxx[0:ncheb + 1]
         # -2
-        xkcol2 = -2*np.ones(xkcol0.shape)
+        xkcol2 = - 2 * np.ones(xkcol0.shape)
         # 1-x_j^2 using trig identity
-        xjrow = 1/(np.sin(np.pi*np.arange(1, ncheb-1)/(ncheb-1)))**2
+        xjrow = 1 / (np.sin(np.pi * np.arange(1, ncheb)/ncheb)) ** 2
 
         fac0 = np.tensordot(xkcol0, xjrow, axes=0)
         fac1 = np.tensordot(xkcol1, xjrow, axes=0)
         fac2 = np.tensordot(xkcol2, xjrow, axes=0)
 
-        d1t = fac0*dd1[:, 1:ncheb-1]+fac1*dd0[:, 1:ncheb-1]
-        d2t = fac0*dd2[:, 1:ncheb-1]+2*fac1*dd1[:, 1:ncheb-1]+fac2*dd0[:, 1:ncheb-1]
+        d1t = fac0 * dd1[:, 1:ncheb] + fac1 * dd0[:, 1:ncheb]
+        d2t = fac0 * dd2[:, 1:ncheb]+2 * fac1 * dd1[:, 1:ncheb] + fac2 * dd0[:, 1:ncheb]
 
         # (1-x_k)/2
-        omx = (np.sin(np.pi*np.arange(ncheb)/2/(ncheb-1)))**2.
+        omx = (np.sin(np.pi * np.arange(ncheb + 1) / 2 / ncheb)) ** 2
         # (1+x_k)/2
-        opx = (np.cos(np.pi*np.arange(ncheb)/2/(ncheb-1)))**2.
+        opx = (np.cos(np.pi * np.arange(ncheb + 1) / 2 / ncheb)) ** 2
 
         # compute phi'_1, phi''_1
-        rr0 = opx+(0.5+dd1[0, 0]+aa1/bb1)*xkcol0/2
-        rr1 = 0.5-(0.5+dd1[0, 0]+aa1/bb1)*xxx
-        rr2 = -0.5-dd1[0, 0]-aa1/bb1
-        rcol1 = rr0*dd1[:, 0]+rr1*dd0[:, 0]
-        rcol2 = rr0*dd2[:, 0]+2*rr1*dd1[:, 0]+rr2*dd0[:, 0]
+        rr0 = opx + (0.5 + dd1[0, 0] + aa1 / bb1) * xkcol0 / 2
+        rr1 = 0.5 - (0.5 + dd1[0, 0] + aa1 / bb1) * xxx
+        rr2 = - 0.5 - dd1[0, 0] - aa1 / bb1
+        rcol1 = rr0 * dd1[:, 0] + rr1 * dd0[:, 0]
+        rcol2 = rr0 * dd2[:, 0] + 2 * rr1 * dd1[:, 0] + rr2 * dd0[:, 0]
 
         # compute phi'_N, phi''_N
-        ll0 = omx+(0.5-dd1[ncheb-1, ncheb-1]-aan/bbn)*xkcol0/2
-        ll1 = -0.5+(dd1[ncheb-1, ncheb-1]+aan/bbn-0.5)*xxx
-        ll2 = dd1[ncheb-1, ncheb-1]+aan/bbn-0.5
-        lcol1 = ll0*dd1[:, ncheb-1]+ll1*dd0[:, ncheb-1]
-        lcol2 = ll0*dd2[:, ncheb-1]+2*ll1*dd1[:, ncheb-1]+ll2*dd0[:, ncheb-1]
+        ll0 = omx + (0.5 - dd1[ncheb, ncheb] - aan / bbn) * xkcol0 / 2
+        ll1 = - 0.5 + (dd1[ncheb, ncheb] + aan / bbn - 0.5) * xxx
+        ll2 = dd1[ncheb, ncheb] + aan / bbn - 0.5
+        lcol1 = ll0 * dd1[:, ncheb] + ll1 * dd0[:, ncheb]
+        lcol2 = ll0 * dd2[:, ncheb] + 2 * ll1 * dd1[:, ncheb] + ll2 * dd0[:, ncheb]
 
         # assemble matrix
         d1t = np.vstack((rcol1, d1t.T, lcol1)).T
         d2t = np.vstack((rcol2, d2t.T, lcol2)).T
 
         # compute phi'_-, phi''_-
-        phim1 = (xkcol0*dd1[:, ncheb-1]+xkcol1*dd0[:, ncheb-1])/2
-        phim2 = (xkcol0*dd2[:, ncheb-1]+2*xkcol1*dd1[:, ncheb-1]+xkcol2*dd0[:, ncheb-1])/2
-        phim = ccn*np.vstack((phim1, phim2)).T/bbn
+        phim1 = (xkcol0 * dd1[:, ncheb] + xkcol1 * dd0[:, ncheb]) / 2
+        phim2 = (xkcol0 * dd2[:, ncheb] + 2 * xkcol1 * dd1[:, ncheb] + xkcol2 * dd0[:, ncheb]) / 2
+        phim = ccn * np.vstack((phim1, phim2)).T / bbn
 
         # compute phi'_+, phi''_+
-        phip1 = (-xkcol0*dd1[:, 0]-xkcol1*dd0[:, 0])/2
-        phip2 = (-xkcol0*dd2[:, 0]-2*xkcol1*dd1[:, 0]-xkcol2*dd0[:, 0])/2
-        phip = cc1*np.vstack((phip1, phip2)).T/bb1
+        phip1 = (- xkcol0 * dd1[:, 0] - xkcol1 * dd0[:, 0]) / 2
+        phip2 = (- xkcol0 * dd2[:, 0] - 2 * xkcol1 * dd1[:, 0] - xkcol2 * dd0[:, 0]) / 2
+        phip = cc1 * np.vstack((phip1, phip2)).T / bb1
 
         # node vector
         xxt = xxx
@@ -848,12 +827,11 @@ def cheb4c(ncheb):
     the clamped boundary conditions u(1)=u'(1)=u(-1)=u'(-1)=0.
 
     Input:
-    N:     N-2 = Order of differentiation matrix.
-    (The interpolant has degree N+1.)
+    ncheb: order of Chebyshev polynomials
 
     Output:
-    x:      Interior Chebyshev points (vector of length N-2)
-    D4:     Fourth derivative matrix  (size (N-2)x(N-2))
+    x:      Interior Chebyshev points (vector of length N - 1)
+    D4:     Fourth derivative matrix  (size (N - 1) x (N - 1))
 
     The code implements two strategies for enhanced
     accuracy suggested by W. Don and S. Solomonoff in
@@ -870,66 +848,66 @@ def cheb4c(ncheb):
         raise Exception('ncheb in cheb4c must be strictly greater than 1')
 
     # initialize dd4
-    dm4 = np.zeros((4, ncheb-2, ncheb-2))
+    dm4 = np.zeros((4, ncheb - 1, ncheb - 1))
 
     # nn1, nn2 used for the flipping trick.
-    nn1 = np.int(np.floor(ncheb/2-1))
-    nn2 = np.int(np.ceil(ncheb/2-1))
+    nn1 = np.int(np.floor((ncheb +1) / 2 - 1))
+    nn2 = np.int(np.ceil((ncheb + 1) / 2 - 1))
     # compute theta vector.
-    kkk = np.arange(1, ncheb-1)
-    theta = kkk*np.pi/(ncheb-1)
+    kkk = np.arange(1, ncheb)
+    theta = kkk * np.pi / ncheb
     # Compute interior Chebyshev points.
-    xch = np.sin(np.pi*(np.linspace(ncheb-3, 3-ncheb, ncheb-2)/(2*(ncheb-1))))
+    xch = np.sin(np.pi * (np.linspace(ncheb - 2, 2 - ncheb, ncheb - 1) / (2 * ncheb)))
     # sin theta
     sth1 = [np.sin(th1) for th1 in theta[0:nn1]]
     sth2 = np.flipud([np.sin(th2) for th2 in theta[0:nn2]])
     sth = np.concatenate((sth1, sth2))
     # compute weight function and its derivative
-    alpha = sth**4.
-    beta1 = -4.*sth**2*xch/alpha
-    beta2 = 4.*(3.*xch**2.-1.)/alpha
-    beta3 = 24.*xch/alpha
-    beta4 = 24./alpha
+    alpha = sth ** 4
+    beta1 = - 4 * sth ** 2 * xch / alpha
+    beta2 = 4 * (3 * xch ** 2 - 1) / alpha
+    beta3 = 24 * xch / alpha
+    beta4 = 24 / alpha
 
     beta = np.vstack((beta1, beta2, beta3, beta4))
-    thti = np.tile(theta/2, (ncheb-2, 1)).T
+    thti = np.tile(theta / 2, (ncheb - 1, 1)).T
     # trigonometric identity
-    ddx = 2*np.sin(thti.T+thti)*np.sin(thti.T-thti)
+    ddx = 2 * np.sin(thti.T + thti) * np.sin(thti.T - thti)
     # flipping trick
-    ddx[nn1:, :] = -np.flipud(np.fliplr(ddx[0:nn2, :]))
+    ddx[nn1:, :] = - np.flipud(np.fliplr(ddx[0:nn2, :]))
     # diagonals of D = 1
-    ddx[range(ncheb-2), range(ncheb-2)] = 1.
+    ddx[range(ncheb - 1), range(ncheb - 1)] = 1
 
     # compute the matrix with entries c(k)/c(j)
-    sss = sth**2.*(-1.)**kkk
-    sti = np.tile(sss, (ncheb-2, 1)).T
-    cmat = sti/sti.T
+    sss = sth ** 2 * (-1) ** kkk
+    sti = np.tile(sss, (ncheb - 1, 1)).T
+    cmat = sti / sti.T
 
     # Z contains entries 1/(x(k)-x(j)).
     # with zeros on the diagonal.
-    zmat = np.array(1./ddx, float)
-    zmat[range(ncheb-2), range(ncheb-2)] = 0.
+    zmat = np.array(1 / ddx, float)
+    zmat[range(ncheb - 1), range(ncheb - 1)] = 0
 
     # X is same as Z', but with
     # diagonal entries removed.
     xmat = np.copy(zmat).T
     xmat2 = xmat
-    for i in range(0, ncheb-2):
-        xmat2[i:ncheb-3, i] = xmat[i+1:ncheb-2, i]
-    xmat = xmat2[0:ncheb-3, :]
+    for i in range(0, ncheb - 1):
+        xmat2[i:ncheb - 2, i] = xmat[i + 1:ncheb - 1, i]
+    xmat = xmat2[0:ncheb - 2, :]
 
     # initialize Y and D matrices.
     # Y contains matrix of cumulative sums
     # D scaled differentiation matrices.
-    ymat = np.ones((ncheb-3, ncheb-2))
-    dmat = np.eye(ncheb-2)
+    ymat = np.ones((ncheb - 2, ncheb - 1))
+    dmat = np.eye(ncheb - 1)
     for ell in range(4):
         # diags
-        ymat = np.cumsum(np.vstack((beta[ell, :], (ell+1)*(ymat[0:ncheb-3, :])*xmat)), 0)
+        ymat = np.cumsum(np.vstack((beta[ell, :], (ell + 1) * (ymat[0:ncheb - 2, :])*xmat)), 0)
         # off-diags
-        dmat = (ell+1)*zmat*(cmat*np.transpose(np.tile(np.diag(dmat), (ncheb-2, 1)))-dmat)
+        dmat = (ell + 1) * zmat * (cmat * np.transpose(np.tile(np.diag(dmat), (ncheb - 1, 1))) - dmat)
         # correct the diagonal
-        dmat[range(ncheb-2), range(ncheb-2)] = ymat[ncheb-3, :]
+        dmat[range(ncheb - 1), range(ncheb - 1)] = ymat[ncheb - 2, :]
         # store in dm4
         dm4[ell, :, :] = dmat
     dd4 = dm4[3, :, :]
@@ -947,7 +925,7 @@ def chebint(ffk, xxx):
 
     Input:
     ffk: Vector of y-coordinates of data, at Chebyshev points
-        x(k) = cos((k-1)*pi/(N-1)), k = 1...N.
+        x(k) = cos(k * pi / N), k = 0...N.
     xxx: Vector of x-values where polynomial interpolant is to be evaluated.
 
     Output:
@@ -960,24 +938,24 @@ def chebint(ffk, xxx):
 
     J.A.C. Weideman, S.C. Reddy 1998
     """
-    ncheb = ffk.shape[0]
+    ncheb = ffk.shape[0] - 1
     if ncheb <= 1:
         raise Exception('At least two data points are necessary in chebint')
 
     nnx = xxx.shape[0]
 
     # compute Chebyshev points
-    xxk = np.sin(np.pi*(2*np.linspace(ncheb-1, 0, ncheb)-(ncheb-1))/(2*(ncheb-1)))
+    xxk = np.sin(np.pi*(2*np.linspace(ncheb, 0, ncheb + 1) - ncheb) / (2 * ncheb))
     # weights for Chebyshev formula
-    wgt = (-1.)**np.arange(ncheb)
-    wgt[0] = wgt[0]/2
-    wgt[ncheb-1] = wgt[ncheb-1]/2
+    wgt = (-1.) ** np.arange(ncheb + 1)
+    wgt[0] /= 2
+    wgt[ncheb] /= 2
 
     # Compute quantities xxx-xxk
-    dif = np.tile(xxx, (ncheb, 1)).T-np.tile(xxk, (nnx, 1))
-    dif = 1/(dif+np.where(dif == 0, np.finfo(float).eps, 0))
+    dif = np.tile(xxx, (ncheb + 1, 1)).T-np.tile(xxk, (nnx, 1))
+    dif = 1 / (dif + np.where(dif == 0, np.finfo(float).eps, 0))
 
-    return np.dot(dif, wgt*ffk)/np.dot(dif, wgt)
+    return np.dot(dif, wgt * ffk) / np.dot(dif, wgt)
 
 def fourint():
     pass
@@ -1125,17 +1103,20 @@ def orrsom(ncheb, rey):
     from scipy import linalg
 
     # Compute second derivative
-    xxt, ddm = chebdif(ncheb+2, 2)
+    ddm = chebdif(ncheb + 2, 2)[1]
     # Enforce Dirichlet BCs
-    dd2 = ddm[1, 1:ncheb+1, 1:ncheb+1]
+    dd2 = ddm[1, 1:ncheb + 2, 1:ncheb + 2]
+    print('dd2 =', dd2)
     # Compute fourth derivative
-    xxt, dd4 = cheb4c(ncheb+2)
+    xxt, dd4 = cheb4c(ncheb + 2)
+    print('xxt =', xxt)
+    print('dd4 = ', dd4)
     # identity matrix
     ieye = np.eye(dd4.shape[0])
 
     # setup A and B matrices
-    amat = (dd4-2*dd2+ieye)/rey-2*1j*ieye-1j*np.dot(np.diag(1-xxt**2), (dd2-ieye))
-    bmat = dd2-ieye
+    amat = (dd4 - 2 * dd2 + ieye) / rey - 2 * 1j * ieye - 1j * np.dot(np.diag(1 - xxt ** 2), (dd2 - ieye))
+    bmat = dd2 - ieye
     # Compute eigenvalues
     eigv = linalg.eig(amat, bmat, right=False)
     # Find eigenvalue of largest real part
