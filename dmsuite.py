@@ -629,8 +629,33 @@ def fourdif(nfou, mder):
     ddm = toeplitz(col1, row1)
     return xxt, ddm
 
-def sincdif():
-    pass
+def sincdif(npol, mder, step):
+    """
+    sinc differentiation matrices
+
+    Input
+    npol: polynomial order. npol + 1 is the number of points.
+    mder: number of differentiation orders (integer).
+    step: step-size (real, positive)
+
+    Output
+    xxt: vector of nodes
+    ddm: ddm[l, 0:npol, 0:npol] is the l-th order differentiation matrix 
+             with l=1..mder
+    """
+    dmm = np.zeros((mder, npol + 1, npol + 1))
+    knu = np.arange(1, npol+1)
+    tva = knu * np.pi
+    xxt = step * np.arange(- npol / 2, npol / 2 + 1.)
+    sigma = np.zeros(knu.shape)
+    for ell in range(1, mder + 1):
+        sigma = (-ell * sigma + np.imag(np.exp(1j * tva ) * 1j ** ell)) / tva
+        col = (np.pi / step) ** ell * np.concatenate(([np.imag(1j ** (ell + 1)) / (ell + 1)], sigma))
+        row = (-1) ** ell * col
+        row[0] = col[0]
+        dmm[ell - 1, :, :] = toeplitz(col, row)
+
+    return xxt, dmm
 
 def cheb2bc(ncheb, bcs):
     """
