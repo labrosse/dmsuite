@@ -1,7 +1,3 @@
-.. image:: https://landscape.io/github/labrosse/dmsuite/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/labrosse/dmsuite/master
-   :alt: Code Health
-
 dmsuite
 =======
 
