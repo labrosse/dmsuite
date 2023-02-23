@@ -306,8 +306,8 @@ def chebdif(ncheb, mder):
 
     DM = np.zeros((mder, ncheb + 1, ncheb + 1))
     # indices used for flipping trick
-    nn1 = np.int(np.floor((ncheb + 1) / 2))
-    nn2 = np.int(np.ceil((ncheb + 1) / 2))
+    nn1 = int(np.floor((ncheb + 1) / 2))
+    nn2 = int(np.ceil((ncheb + 1) / 2))
     k = np.arange(ncheb+1)
     # compute theta vector
     th = k * np.pi / ncheb
@@ -580,8 +580,8 @@ def fourdif(nfou, mder):
     # grid spacing
     dhh = 2*np.pi/nfou
 
-    nn1 = np.int(np.floor((nfou-1)/2.))
-    nn2 = np.int(np.ceil((nfou-1)/2.))
+    nn1 = int(np.floor((nfou-1)/2.))
+    nn2 = int(np.ceil((nfou-1)/2.))
     if mder == 0:
         # compute first column of zeroth derivative matrix, which is identity
         col1 = np.zeros(nfou)
@@ -617,7 +617,7 @@ def fourdif(nfou, mder):
 
     else:
         # employ FFT to compute 1st column of matrix for mder > 2
-        nfo1 = np.int(np.floor((nfou-1)/2.))
+        nfo1 = int(np.floor((nfou-1)/2.))
         nfo2 = -nfou/2*(mder+1)%2*np.ones((nfou+1)%2)
         mwave = 1j*np.concatenate((np.arange(nfo1+1), nfo2, np.arange(-nfo1, 0)))
         col1 = np.real(np.fft.ifft(mwave**mder*np.fft.fft(np.hstack(([1], np.zeros(nfou-1))))))
@@ -876,8 +876,8 @@ def cheb4c(ncheb):
     dm4 = np.zeros((4, ncheb - 1, ncheb - 1))
 
     # nn1, nn2 used for the flipping trick.
-    nn1 = np.int(np.floor((ncheb +1) / 2 - 1))
-    nn2 = np.int(np.ceil((ncheb + 1) / 2 - 1))
+    nn1 = int(np.floor((ncheb +1) / 2 - 1))
+    nn2 = int(np.ceil((ncheb + 1) / 2 - 1))
     # compute theta vector.
     kkk = np.arange(1, ncheb)
     theta = kkk * np.pi / ncheb
