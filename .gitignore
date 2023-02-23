@@ -2,7 +2,9 @@
 
 __pycache__/
 
-dmsuite.egg-info/
+/build
+/dmsuite/_version.py
+/dmsuite.egg-info/
 
 .pytest_cache/
 .tox/

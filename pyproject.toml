@@ -1,2 +1,39 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm", "wheel"]
+requires = ["setuptools>=61", "setuptools_scm>=7.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dmsuite"
+dynamic = ["version"]
+description = "Differenciation matrices"
+readme = "README.rst"
+authors = [
+    {name = "Adrien Morison", email = "adrien.morison@gmail.com"},
+    {name = "Stéphane Labrosse"},
+]
+maintainers = [
+    {name = "Adrien Morison", email = "adrien.morison@gmail.com"},
+    {name = "Stéphane Labrosse"},
+]
+license = {file = "LICENSE"}
+urls = {homepage = "https://github.com/labrosse/dmsuite"}
+classifiers=[
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+]
+requires-python = ">=3.5"
+dependencies = [
+    "numpy>=1.12",
+    "scipy>=1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["dmsuite"]
+namespaces = false
+
+[tool.setuptools_scm]
+write_to = "dmsuite/_version.py"
