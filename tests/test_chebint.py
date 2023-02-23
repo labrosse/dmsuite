@@ -1,13 +1,14 @@
 import numpy as np
 
-import dmsuite as dm
+from dmsuite.interp import chebint
+from dmsuite.poly_diff import chebdif
 
 
 def test_chebint():
     """Test of order 6 chebint"""
     expected = np.load("tests/data/chebint6.npy")
-    zcheb = dm.chebdif(6, 1)[0]
+    zcheb = chebdif(6, 1)[0]
     fcheb = np.cos(np.pi * zcheb)
     zint = np.linspace(-1, 1, num=50)
-    computed = dm.chebint(fcheb, zint)
+    computed = chebint(fcheb, zint)
     assert np.allclose(computed, expected)

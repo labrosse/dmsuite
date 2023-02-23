@@ -1,6 +1,6 @@
 import numpy as np
 
-import dmsuite as dm
+from dmsuite.poly_diff import poldif
 
 
 def test_poldif5():
@@ -12,5 +12,5 @@ def test_poldif5():
     """
     expected = np.load("tests/data/poldif1_5.npy")
     x = np.arange(0, 1.2, 0.2)
-    computed = dm.poldif(x, 5)
+    computed = poldif(x, 5)
     assert np.allclose(computed, expected)
