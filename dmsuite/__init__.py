@@ -1,8 +1,8 @@
 """
-This module provides native Numpy implementations of the seventeen
-m-files provided in the DMSuite library of Weidemann and Reddy in
-ACM Transactions of Mathematical Software, 4, 465-519 (2000). The
-authors describe their library as:
+Numpy implementations of functions provided in the DMSuite library of
+Weidemann and Reddy in
+ACM Transactions of Mathematical Software, 4, 465-519 (2000).
+The authors describe their library as:
 
  "functions for solving differential equations on bounded, periodic,
  and infinite intervals by the spectral collocation (pseudospectral)
@@ -42,37 +42,17 @@ III. Boundary Conditions
 
 IV. Interpolation
 
-1.  polint  : Barycentric polynomial interpolation on arbitrary distinct nodes
-2.  chebint : Barycentric polynomial interpolation on Chebyshev nodes.
-3.  fourint : Barycentric trigonometric interpolation at equidistant nodes.
+1.  chebint : Barycentric polynomial interpolation on Chebyshev nodes.
 
-V. Transform-based derivatives
-
-1.  chebdifft : Chebyshev derivative.
-2.  fourdifft : Fourier derivative.
-3.  sincdift  : Sinc derivative.
-
-VI. Roots of Orthogonal Polynomials
+V. Roots of Orthogonal Polynomials
 
 1.  legroots : Roots of Legendre polynomials.
 2.  lagroots : Roots of Laguerre polynomials.
 3.  herroots : Roots of Hermite polynomials.
 
-VII. Examples
+VI. Examples
 
-1. cerfa.m: Function file for computing the complementary error function.
-Boundary condition (a) is used.
-2. cerfb.m: Same as cerfa.m but boundary condition (b) is used.
-3. matplot.m: Script file for plotting the characteristic curves
-of Mathieu's equation.
-4. ce0.m: Function file for computing the Mathieu cosine elliptic function.
-5. sineg.m: Script file for solving the sine-Gordon equation.
-6. sgrhs.m: Function file for computing the right-hand side of the
-sine-Gordon system.
-7. schrod.m: Script file for computing the eigenvalues of the
-Schr\"odinger equation.
-8. orrsom.m: Script file for computing the eigenvalues of the
-Orr-Sommerfeld equation.
+1. orrsom: eigenvalues of the Orr-Sommerfeld equation.
 """
 from __future__ import division
 
@@ -88,22 +68,10 @@ __all__ = [
     "sincdif",
     "cheb2bc",
     "cheb4c",
-    "polint",
     "chebint",
-    "fourint",
-    "chebdifft",
-    "fourdifft",
-    "sincdift",
     "legroots",
     "lagroots",
     "herroots",
-    "cerfa",
-    "cerfb",
-    "matplot",
-    "ce0",
-    "sineg",
-    "sgrhs",
-    "schrod",
     "orrsom",
 ]
 
@@ -1010,10 +978,6 @@ def cheb4c(ncheb):
     return xch, dd4
 
 
-def polint():
-    pass
-
-
 def chebint(ffk, xxx):
     """
     Polynomial interpolant of the data ffk, xxk (Chebyshev nodes)
@@ -1053,22 +1017,6 @@ def chebint(ffk, xxx):
     dif = 1 / (dif + np.where(dif == 0, np.finfo(float).eps, 0))
 
     return np.dot(dif, wgt * ffk) / np.dot(dif, wgt)
-
-
-def fourint():
-    pass
-
-
-def chebdifft():
-    pass
-
-
-def fourdifft():
-    pass
-
-
-def sincdift():
-    pass
 
 
 def legroots(N):
@@ -1152,49 +1100,6 @@ def herroots(N):
     # return sorted, normalised eigenvalues
     # real part only since all roots must be real.
     return np.real(np.sort(mu) / np.sqrt(2))
-
-
-def cerfa():
-    pass
-
-
-def cerfb():
-    pass
-
-
-def matplot():
-    pass
-
-
-def ce0():
-    pass
-
-
-def sineg():
-    pass
-
-
-def sgrhs():
-    pass
-
-
-def schrod():  # (nlag, blag):
-    """
-    First eigenvalue of the Schrodinger equation on the half-line
-
-    INPUT
-    -----
-    nlag: order of the differentiation matrix
-    blag: Scaling parameter of the Laguerre method
-
-    OUTPUT
-    -------
-    smallest eigenvalue
-
-    Uses a nlag x nlag Laguerre differentiation matrix
-    J.A.C. Weideman, S.C. Reddy 1998.
-    """
-    pass
 
 
 def orrsom(ncheb, rey):
