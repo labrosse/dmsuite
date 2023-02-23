@@ -37,5 +37,21 @@ dependencies = [
 include = ["dmsuite"]
 namespaces = false
 
+[tool.setuptools.package-data]
+dmsuite = ["py.typed"]
+
 [tool.setuptools_scm]
 write_to = "dmsuite/_version.py"
+
+[tool.mypy]
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = [
+    "scipy.*",
+]
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
