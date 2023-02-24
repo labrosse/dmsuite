@@ -4,7 +4,7 @@ from dmsuite.interp import chebint
 from dmsuite.poly_diff import chebdif
 
 
-def test_chebint():
+def test_chebint() -> None:
     """Test of order 6 chebint"""
     expected = np.load("tests/data/chebint6.npy")
     zcheb = chebdif(6, 1)[0]

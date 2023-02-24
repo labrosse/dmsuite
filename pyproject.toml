@@ -44,7 +44,7 @@ dmsuite = ["py.typed"]
 write_to = "dmsuite/_version.py"
 
 [tool.mypy]
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = [

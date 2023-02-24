@@ -3,7 +3,7 @@ import numpy as np
 from dmsuite.poly_diff import chebdif
 
 
-def test_chebdif4():
+def test_chebdif4() -> None:
     """Test of order 4 cheb diff"""
     expected = np.load("tests/data/chebdif4.npy", allow_pickle=True)
     computed = chebdif(4, 4)

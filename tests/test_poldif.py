@@ -3,7 +3,7 @@ import numpy as np
 from dmsuite.poly_diff import poldif
 
 
-def test_poldif5():
+def test_poldif5() -> None:
     """Test of order 5 polynomial diff
 
     Only the call with two arguments is tested here.

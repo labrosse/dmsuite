@@ -3,7 +3,7 @@ import numpy as np
 from dmsuite.cheb_bc import cheb2bc
 
 
-def test_cheb2bc5():
+def test_cheb2bc5() -> None:
     """Test of order 5 chebychev diff with robin BC"""
     bc1 = [[1, 0, 1], [1, 0, 1]]
     bc2 = [[0, 1, 1], [0, 1, 1]]
