@@ -1,12 +1,15 @@
 """Polynomial-based differentation matrices."""
 
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
 from scipy.linalg import toeplitz
 
 from .roots import herroots, lagroots
 
 
-def poldif(*arg):
+def poldif(*arg: Any) -> NDArray:
     """General differentation matrices.
 
     Calculate differentiation matrices on arbitrary nodes.
@@ -141,7 +144,7 @@ def poldif(*arg):
     return DM
 
 
-def chebdif(ncheb, mder):
+def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
     """Chebyshev collocation differentation matrices.
 
     Returns the differentiation matrices D1, D2, .. Dmder corresponding to the
@@ -151,18 +154,14 @@ def chebdif(ncheb, mder):
     Parameters
     ----------
 
-    ncheb : int, polynomial order. ncheb + 1 collocation points
-
-    mder   : int
-          maximum order of the derivative, 0 < mder <= ncheb - 1
+    ncheb: polynomial order. ncheb + 1 collocation points
+    mder: maximum order of the derivative, 0 < mder <= ncheb - 1
 
     Returns
     -------
-    x  : ndarray
-         (ncheb + 1) x 1 array of Chebyshev points
+    x  : array of (ncheb + 1) Chebyshev points
 
-    DM : ndarray
-         mder x ncheb x ncheb  array of differentiation matrices
+    DM : mder x (ncheb+1) x (ncheb+1) differentiation matrices
 
     Notes
     -----
@@ -295,7 +294,7 @@ def chebdif(ncheb, mder):
     return x, DM
 
 
-def herdif(N, M, b=1):
+def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     """Hermite collocation differentation matrices.
 
     Returns the differentiation matrices D1, D2, .. DM corresponding to the
@@ -305,23 +304,16 @@ def herdif(N, M, b=1):
     Parameters
     ----------
 
-    N   : int
-          number of grid points
-
-    M   : int
-          maximum order of the derivative, 0 < M < N
-
-    b   : float, optional
-          scale parameter, real and positive
+    N: number of grid points
+    M: maximum order of the derivative, 0 < M < N
+    b: scale parameter, real and positive
 
     Returns
     -------
-    x  : ndarray
-         N x 1 array of Hermite nodes which are zeros of the N-th degree
-         Hermite polynomial, scaled by b
+    x: array of N Hermite nodes which are zeros of the N-th degree
+       Hermite polynomial, scaled by b
 
-    DM : ndarray
-         M x N x N  array of differentiation matrices
+    DM: M x N x N array of differentiation matrices
 
     Notes
     -----
@@ -382,7 +374,7 @@ def herdif(N, M, b=1):
     return x, DM
 
 
-def lagdif(N, M, b):
+def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
     """Laguerre collocation differentiation matrices.
 
     Returns the differentiation matrices D1, D2, .. DM corresponding to the
@@ -391,23 +383,16 @@ def lagdif(N, M, b):
     Parameters
     ----------
 
-    N   : int
-          number of grid points
-
-    M   : int
-          maximum order of the derivative, 0 < M < N
-
-    b   : float
-          scale parameter, real and positive
+    N: number of grid points
+    M: maximum order of the derivative, 0 < M < N
+    b: scale parameter, real and positive
 
     Returns
     -------
-    x  : ndarray
-         N x 1 array of Hermite nodes which are zeros of the N-th degree
-         Hermite polynomial, scaled by b
+    x: array of N Hermite nodes which are zeros of the N-th degree Hermite
+       polynomial, scaled by b
 
-    DM : ndarray
-         M x N x N  array of differentiation matrices
+    DM: M x N x N array of differentiation matrices
 
     Notes
     -----

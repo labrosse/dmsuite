@@ -1,11 +1,16 @@
 """Chebyshev matrices incorporating boundary conditions."""
 
+from typing import Sequence
+
 import numpy as np
+from numpy.typing import NDArray
 
 from .poly_diff import chebdif
 
 
-def cheb2bc(ncheb, bcs):
+def cheb2bc(
+    ncheb: int, bcs: Sequence[Sequence[float]]
+) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     """Chebyshev 2nd derivative matrix incorporating Robin conditions.
 
     The boundary conditions are
@@ -13,8 +18,8 @@ def cheb2bc(ncheb, bcs):
     a_N u(-1) + b_N u'(-1) = c_N
 
     INPUT
-    ncheb   =  Order of Chebyshev polynomials
-    bcs       =  boundary condition matrix = [[a_1, b_1, c_1], [a_N, b_N, c_N]]
+    ncheb: Order of Chebyshev polynomials
+    bcs: boundary condition matrix = [[a_1, b_1, c_1], [a_N, b_N, c_N]]
 
     OUTPUT
     xt       = ncheb+1 Chebyshev points corresponding to rows and columns
@@ -203,7 +208,7 @@ def cheb2bc(ncheb, bcs):
     return xxt, d2t, d1t, phip, phim
 
 
-def cheb4c(ncheb):
+def cheb4c(ncheb: int) -> tuple[NDArray, NDArray]:
     """Chebyshev 4th derivative matrix incorporating clamped conditions.
 
     The function x, D4 =  cheb4c(N) computes the fourth

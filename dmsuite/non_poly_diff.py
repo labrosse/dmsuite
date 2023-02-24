@@ -1,10 +1,13 @@
 """Non-polynomial differentiation matrices."""
 
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import NDArray
 from scipy.linalg import toeplitz
 
 
-def fourdif(nfou, mder):
+def fourdif(nfou: int, mder: int) -> tuple[NDArray, NDArray]:
     """
     Fourier spectral differentiation.
 
@@ -97,9 +100,8 @@ def fourdif(nfou, mder):
     return xxt, ddm
 
 
-def sincdif(npol, mder, step):
-    """
-    sinc differentiation matrices
+def sincdif(npol: int, mder: int, step: float) -> tuple[NDArray, NDArray]:
+    """sinc differentiation matrices
 
     Input
     npol: polynomial order. npol + 1 is the number of points.
@@ -119,7 +121,7 @@ def sincdif(npol, mder, step):
     for ell in range(1, mder + 1):
         sigma = (-ell * sigma + np.imag(np.exp(1j * tva) * 1j**ell)) / tva
         col = (np.pi / step) ** ell * np.concatenate(
-            ([np.imag(1j ** (ell + 1)) / (ell + 1)], sigma)
+            [[np.imag(1j ** (ell + 1)) / (ell + 1)], sigma]
         )
         row = (-1) ** ell * col
         row[0] = col[0]
