@@ -7,21 +7,19 @@ from .cheb_bc import cheb4c
 from .poly_diff import chebdif
 
 
-def orrsom(ncheb, rey):
+def orrsom(ncheb: int, rey: float) -> np.complexfloating:
     """Eigenvalues of the Orr-Sommerfeld equation using Chebyshev collocation.
 
     Parameters
     ----------
 
-    ncheb : int, number of grid points
-
-    rey : float, Reynolds number
+    ncheb : number of grid points
+    rey : Reynolds number
 
     Returns
     -------
     meig : Eigenvalue with largest real part
     """
-
     # Compute second derivative
     ddm = chebdif(ncheb + 2, 2)[1]
     # Enforce Dirichlet BCs

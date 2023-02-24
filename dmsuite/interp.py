@@ -1,9 +1,10 @@
 """Interpolation."""
 
 import numpy as np
+from numpy.typing import NDArray
 
 
-def chebint(ffk, xxx):
+def chebint(ffk: NDArray, xxx: NDArray) -> NDArray:
     """Barycentric polynomial interpolation on Chebyshev nodes.
 
     Polynomial interpolant of the data ffk, xxk (Chebyshev nodes)
