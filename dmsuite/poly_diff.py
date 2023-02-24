@@ -1,5 +1,6 @@
 """Polynomial-based differentation matrices."""
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -7,6 +8,76 @@ from numpy.typing import NDArray
 from scipy.linalg import toeplitz
 
 from .roots import herroots, lagroots
+
+
+@dataclass(frozen=True)
+class GeneralPoly:
+    """General differentiation matrices.
+
+    Attributes:
+        nodes: position of N distinct nodes.
+        weights: vector of weight values, evaluated at nodes.
+        weight_derivs: matrix of size M x N, element (i, j) is the i-th
+            derivative of log(weights(x)) at the j-th node.
+    """
+
+    nodes: NDArray
+    weights: NDArray
+    weight_derivs: NDArray
+
+    def diff(self) -> NDArray:
+        x = self.nodes
+        alpha = self.weights
+        B = self.weight_derivs
+        N = np.size(x)
+        M = B.shape[0]
+
+        I = np.eye(N)  # identity matrix
+        L = np.logical_or(I, np.zeros(N))  # logical identity matrix
+        XX = np.transpose(
+            np.array(
+                [
+                    x,
+                ]
+                * N
+            )
+        )
+        DX = XX - np.transpose(XX)  # DX contains entries x(k)-x(j)
+        DX[L] = np.ones(N)  # put 1's one the main diagonal
+        c = alpha * np.prod(DX, 1)  # quantities c(j)
+        C = np.transpose(
+            np.array(
+                [
+                    c,
+                ]
+                * N
+            )
+        )
+        C = C / np.transpose(C)  # matrix with entries c(k)/c(j).
+        Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
+        Z[L] = 0  # eye(N)*ZZ;                # with zeros on the diagonal.
+        X = np.transpose(np.copy(Z))  # X is same as Z', but with ...
+        Xnew = X
+
+        for i in range(0, N):
+            Xnew[i : N - 1, i] = X[i + 1 : N, i]
+
+        X = Xnew[0 : N - 1, :]  # ... diagonal entries removed
+        Y = np.ones([N - 1, N])  # initialize Y and D matrices.
+        D = np.eye(N)  # Y is matrix of cumulative sums
+
+        DM = np.empty((M, N, N))  # differentiation matrices
+
+        for ell in range(1, M + 1):
+            Y = np.cumsum(
+                np.vstack((B[ell - 1, :], ell * (Y[0 : N - 1, :]) * X)), 0
+            )  # diags
+            D = (
+                ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)
+            )  # off-diags
+            D[L] = Y[N - 1, :]
+            DM[ell - 1, :, :] = D
+        return DM
 
 
 def poldif(*arg: Any) -> NDArray:
@@ -94,54 +165,8 @@ def poldif(*arg: Any) -> NDArray:
     elif len(arg) == 3:
         # specified weight function : arguments are nodes, weights and B  matrix
         x, alpha, B = arg[0], arg[1], arg[2]
-        N = np.size(x)
-        M = B.shape[0]
 
-    I = np.eye(N)  # identity matrix
-    L = np.logical_or(I, np.zeros(N))  # logical identity matrix
-    XX = np.transpose(
-        np.array(
-            [
-                x,
-            ]
-            * N
-        )
-    )
-    DX = XX - np.transpose(XX)  # DX contains entries x(k)-x(j)
-    DX[L] = np.ones(N)  # put 1's one the main diagonal
-    c = alpha * np.prod(DX, 1)  # quantities c(j)
-    C = np.transpose(
-        np.array(
-            [
-                c,
-            ]
-            * N
-        )
-    )
-    C = C / np.transpose(C)  # matrix with entries c(k)/c(j).
-    Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
-    Z[L] = 0  # eye(N)*ZZ;                # with zeros on the diagonal.
-    X = np.transpose(np.copy(Z))  # X is same as Z', but with ...
-    Xnew = X
-
-    for i in range(0, N):
-        Xnew[i : N - 1, i] = X[i + 1 : N, i]
-
-    X = Xnew[0 : N - 1, :]  # ... diagonal entries removed
-    Y = np.ones([N - 1, N])  # initialize Y and D matrices.
-    D = np.eye(N)  # Y is matrix of cumulative sums
-
-    DM = np.empty((M, N, N))  # differentiation matrices
-
-    for ell in range(1, M + 1):
-        Y = np.cumsum(
-            np.vstack((B[ell - 1, :], ell * (Y[0 : N - 1, :]) * X)), 0
-        )  # diags
-        D = ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)  # off-diags
-        D[L] = Y[N - 1, :]
-        DM[ell - 1, :, :] = D
-
-    return DM
+    return GeneralPoly(nodes=x, weights=alpha, weight_derivs=B).diff()
 
 
 def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
