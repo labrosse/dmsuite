@@ -248,8 +248,8 @@ def cheb4c(ncheb: int) -> tuple[NDArray, NDArray]:
     # Compute interior Chebyshev points.
     xch = np.sin(np.pi * (np.linspace(ncheb - 2, 2 - ncheb, ncheb - 1) / (2 * ncheb)))
     # sin theta
-    sth1 = [np.sin(th1) for th1 in theta[0:nn1]]
-    sth2 = np.flipud([np.sin(th2) for th2 in theta[0:nn2]])
+    sth1 = np.sin(theta[0:nn1])
+    sth2 = np.flipud(np.sin(theta[0:nn2]))
     sth = np.concatenate((sth1, sth2))
     # compute weight function and its derivative
     alpha = sth**4

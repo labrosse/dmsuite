@@ -444,7 +444,7 @@ def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
         raise Exception("derivative order must be at least 1")
 
     # compute Laguerre nodes
-    x = 0  # include origin
+    x = np.array([0])  # include origin
     x = np.append(x, lagroots(N - 1))  # Laguerre roots
     alpha = np.exp(-x / 2)  # Laguerre weights
 
