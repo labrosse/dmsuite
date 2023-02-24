@@ -32,8 +32,6 @@ class GeneralPoly:
         N = np.size(x)
         M = B.shape[0]
 
-        I = np.eye(N)  # identity matrix
-        L = np.logical_or(I, np.zeros(N))  # logical identity matrix
         XX = np.transpose(
             np.array(
                 [
@@ -43,7 +41,7 @@ class GeneralPoly:
             )
         )
         DX = XX - np.transpose(XX)  # DX contains entries x(k)-x(j)
-        DX[L] = np.ones(N)  # put 1's one the main diagonal
+        np.fill_diagonal(DX, 1.0)
         c = alpha * np.prod(DX, 1)  # quantities c(j)
         C = np.transpose(
             np.array(
@@ -55,7 +53,7 @@ class GeneralPoly:
         )
         C = C / np.transpose(C)  # matrix with entries c(k)/c(j).
         Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
-        Z[L] = 0  # eye(N)*ZZ;                # with zeros on the diagonal.
+        np.fill_diagonal(Z, 0.0)
         X = np.transpose(np.copy(Z))  # X is same as Z', but with ...
         Xnew = X
 
@@ -75,7 +73,7 @@ class GeneralPoly:
             D = (
                 ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)
             )  # off-diags
-            D[L] = Y[N - 1, :]
+            np.fill_diagonal(D, Y[N - 1, :])
             DM[ell - 1, :, :] = D
         return DM
 
