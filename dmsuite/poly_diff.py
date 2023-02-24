@@ -32,26 +32,12 @@ class GeneralPoly:
         N = np.size(x)
         M = B.shape[0]
 
-        XX = np.transpose(
-            np.array(
-                [
-                    x,
-                ]
-                * N
-            )
-        )
-        DX = XX - np.transpose(XX)  # DX contains entries x(k)-x(j)
+        XX = np.tile(x, (N, 1))
+        DX = np.transpose(XX) - XX  # DX contains entries x(k)-x(j)
         np.fill_diagonal(DX, 1.0)
         c = alpha * np.prod(DX, 1)  # quantities c(j)
-        C = np.transpose(
-            np.array(
-                [
-                    c,
-                ]
-                * N
-            )
-        )
-        C = C / np.transpose(C)  # matrix with entries c(k)/c(j).
+        C = np.tile(c, (N, 1))
+        C = np.transpose(C) / C  # matrix with entries c(k)/c(j).
         Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
         np.fill_diagonal(Z, 0.0)
         X = np.transpose(np.copy(Z))  # X is same as Z', but with ...
