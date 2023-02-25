@@ -311,30 +311,3 @@ class Laguerre:
         The matrix is constructed by differentiating Laguerre interpolants.
         """
         return self.scale**order * self._dmat.diff_mat(order)
-
-
-def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
-    """Laguerre collocation differentiation matrices.
-
-    Returns the differentiation matrices D1, D2, .. DM corresponding to the
-    M-th derivative of the function f, at the N Laguerre nodes.
-
-    Parameters
-    ----------
-
-    N: number of grid points
-    M: maximum order of the derivative, 0 < M < N
-    b: scale parameter, real and positive
-
-    Returns
-    -------
-    x: array of N Hermite nodes which are zeros of the N-th degree Hermite
-       polynomial, scaled by b
-
-    DM: M x N x N array of differentiation matrices
-    """
-    laguerre = Laguerre(N - 1, M, b)
-    DM = np.zeros((M, N, N))
-    for ell in range(M):
-        DM[ell, :, :] = laguerre.diff_mat(order=ell + 1)
-    return laguerre.nodes, DM
