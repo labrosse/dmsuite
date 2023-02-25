@@ -35,6 +35,12 @@ from .roots import herroots, lagroots
 class GeneralPoly:
     """General differentiation matrices.
 
+    The matrix is constructed by differentiating N-th order Lagrange
+    interpolating polynomial that passes through the speficied points.
+
+    This function is based on code by Rex Fuzzle
+    https://github.com/RexFuzzle/Python-Library
+
     Attributes:
         nodes: position of N distinct arbitrary nodes.
         weights: vector of weight values, evaluated at nodes.
@@ -110,14 +116,7 @@ class GeneralPoly:
         return ynew, dnew
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative.
-
-        The matrix is constructed by differentiating N-th order Lagrange
-        interpolating polynomial that passes through the speficied points.
-
-        This function is based on code by Rex Fuzzle
-        https://github.com/RexFuzzle/Python-Library
-        """
+        """Differentiation matrix for the order-th derivative."""
         assert 1 <= order <= self.weight_derivs.shape[0]
         return self._dmats(order)[1]
 
@@ -125,6 +124,25 @@ class GeneralPoly:
 @dataclass(frozen=True)
 class Chebyshev:
     """Chebyshev collocation differentation matrices.
+
+    The matrices are constructed by differentiating ncheb-th order Chebyshev
+    interpolants.
+
+    The code implements two strategies for enhanced accuracy suggested by
+    W. Don and S. Solomonoff :
+
+    (a) the use of trigonometric  identities to avoid the computation of
+    differences x(k)-x(j)
+
+    (b) the use of the "flipping trick"  which is necessary since sin t can
+    be computed to high relative precision when t is small whereas sin (pi-t)
+    cannot.
+
+    It may, in fact, be slightly better not to implement the strategies
+    (a) and (b). Please consult [3] for details.
+
+    This function is based on code by Nikola Mirkov
+    http://code.google.com/p/another-chebpy
 
     Attributes:
         degree: polynomial degree.
@@ -198,28 +216,7 @@ class Chebyshev:
         return dnew
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative.
-
-        The
-        matrices are constructed by differentiating ncheb-th order Chebyshev
-        interpolants.
-
-        The code implements two strategies for enhanced accuracy suggested by
-        W. Don and S. Solomonoff :
-
-        (a) the use of trigonometric  identities to avoid the computation of
-        differences x(k)-x(j)
-
-        (b) the use of the "flipping trick"  which is necessary since sin t can
-        be computed to high relative precision when t is small whereas sin (pi-t)
-        cannot.
-
-        It may, in fact, be slightly better not to implement the strategies
-        (a) and (b). Please consult [3] for details.
-
-        This function is based on code by Nikola Mirkov
-        http://code.google.com/p/another-chebpy
-        """
+        """Differentiation matrix for the order-th derivative."""
         assert 0 < order <= self.max_order
         return self._dmat(order)
 
@@ -227,6 +224,8 @@ class Chebyshev:
 @dataclass(frozen=True)
 class Hermite:
     """Hermite collocation differentation matrices.
+
+    The matrix is constructed by differentiating Hermite interpolants.
 
     Attributes:
         degree: Hermite polynomial degree, also the number of nodes.
@@ -271,16 +270,15 @@ class Hermite:
         return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta[1:, :])
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative.
-
-        The matrix is constructed by differentiating Hermite interpolants.
-        """
+        """Differentiation matrix for the order-th derivative."""
         return self.scale**order * self._dmat.diff_mat(order)
 
 
 @dataclass(frozen=True)
 class Laguerre:
     """Laguerre collocation differentiation matrices.
+
+    The matrix is constructed by differentiating Laguerre interpolants.
 
     Attributes:
         degree: Laguerre polynomial degree. There are degree+1 nodes.
@@ -322,8 +320,5 @@ class Laguerre:
         return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative.
-
-        The matrix is constructed by differentiating Laguerre interpolants.
-        """
+        """Differentiation matrix for the order-th derivative."""
         return self.scale**order * self._dmat.diff_mat(order)
