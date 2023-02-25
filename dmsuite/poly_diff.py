@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, lru_cache
 
 import numpy as np
 from numpy.typing import NDArray
@@ -335,3 +335,27 @@ class Laguerre(DiffMatrices):
 
     def at_order(self, order: int) -> NDArray:
         return self.scale**order * self._dmat.at_order(order)
+
+
+@dataclass(frozen=True)
+class DiffMatOnDomain(DiffMatrices):
+    """Differentiation matrices stretched and shifted to a different domain.
+
+    The stretching and shifting is done linearly between xmin and xmax.
+    """
+
+    xmin: float
+    xmax: float
+    dmat: DiffMatrices
+
+    @cached_property
+    def stretching(self) -> NDArray:
+        return (self.dmat.nodes[-1] - self.dmat.nodes[0]) / (self.xmax - self.xmin)
+
+    @cached_property
+    def nodes(self) -> NDArray:
+        return (self.dmat.nodes - self.dmat.nodes[0]) / self.stretching + self.xmin
+
+    @lru_cache
+    def at_order(self, order: int) -> NDArray:
+        return self.stretching**order * self.dmat.at_order(order)
