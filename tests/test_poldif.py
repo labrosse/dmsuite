@@ -1,6 +1,6 @@
 import numpy as np
 
-from dmsuite.poly_diff import poldif
+from dmsuite.poly_diff import GeneralPoly
 
 
 def test_poldif5() -> None:
@@ -11,6 +11,8 @@ def test_poldif5() -> None:
     tested by the corresponding function.
     """
     expected = np.load("tests/data/poldif1_5.npy")
-    x = np.arange(0, 1.2, 0.2)
-    computed = poldif(x, 5)
+    dmat = GeneralPoly.with_unit_weights(nodes=np.arange(0, 1.2, 0.2))
+    computed = np.zeros_like(expected)
+    for i in range(5):
+        computed[i] = dmat.diff_mat(i + 1)
     assert np.allclose(computed, expected)

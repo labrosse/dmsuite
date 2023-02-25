@@ -1,8 +1,10 @@
 """Polynomial-based differentation matrices."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Any
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,7 +18,7 @@ class GeneralPoly:
     """General differentiation matrices.
 
     Attributes:
-        nodes: position of N distinct nodes.
+        nodes: position of N distinct arbitrary nodes.
         weights: vector of weight values, evaluated at nodes.
         weight_derivs: matrix of size M x N, element (i, j) is the i-th
             derivative of log(weights(x)) at the j-th node.
@@ -25,6 +27,25 @@ class GeneralPoly:
     nodes: NDArray
     weights: NDArray
     weight_derivs: NDArray
+
+    def __post_init__(self) -> None:
+        assert self.nodes.ndim == 1
+        assert self.nodes.shape == self.weights.shape
+        assert self.weight_derivs.ndim == 2
+        assert self.weight_derivs.shape[0] < self.nodes.size
+        assert self.weight_derivs.shape[1] == self.nodes.size
+
+    @staticmethod
+    def with_unit_weights(
+        nodes: NDArray, max_order: Optional[int] = None
+    ) -> GeneralPoly:
+        if max_order is None:
+            max_order = nodes.size - 1
+        return GeneralPoly(
+            nodes,
+            weights=np.ones_like(nodes),
+            weight_derivs=np.zeros((max_order, nodes.size)),
+        )
 
     @cached_property
     def _dmat(self) -> NDArray:
@@ -63,97 +84,31 @@ class GeneralPoly:
         return DM
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix at given order."""
+        """Differentiation matrix for the order-th derivative.
+
+        The matrix is constructed by differentiating N-th order Lagrange
+        interpolating polynomial that passes through the speficied points.
+
+        The M-th derivative of the grid function f is obtained by the matrix-
+        vector multiplication
+
+        .. math::
+
+        f^{(m)}_i = D^{(m)}_{ij}f_j
+
+        This function is based on code by Rex Fuzzle
+        https://github.com/RexFuzzle/Python-Library
+
+        References
+        ----------
+        ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
+        Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
+
+        ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
+        Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
+        """
+        assert 1 <= order <= self.weight_derivs.shape[0]
         return self._dmat[order - 1]
-
-
-def poldif(*arg: Any) -> NDArray:
-    """General differentation matrices.
-
-    Calculate differentiation matrices on arbitrary nodes.
-
-    Returns the differentiation matrices D1, D2, .. DM corresponding to the
-    M-th derivative of the function f at arbitrarily specified nodes. The
-    differentiation matrices can be computed with unit weights or
-    with specified weights.
-
-    Parameters
-    ----------
-
-    x       : ndarray
-              vector of N distinct nodes
-
-    M       : int
-              maximum order of the derivative, 0 < M <= N - 1
-
-
-    OR (when computing with specified weights)
-
-    x       : ndarray
-              vector of N distinct nodes
-
-    alpha   : ndarray
-              vector of weight values alpha(x), evaluated at x = x_j.
-
-    B       : int
-              matrix of size M x N, where M is the highest derivative required.
-              It should contain the quantities B[l,j] = beta_{l,j} =
-              l-th derivative of log(alpha(x)), evaluated at x = x_j.
-
-    Returns
-    -------
-
-    DM : ndarray
-         M x N x N  array of differentiation matrices
-
-    Notes
-    -----
-    This function returns  M differentiation matrices corresponding to the
-    1st, 2nd, ... M-th derivates on arbitrary nodes specified in the array
-    x. The nodes must be distinct but are, otherwise, arbitrary. The
-    matrices are constructed by differentiating N-th order Lagrange
-    interpolating polynomial that passes through the speficied points.
-
-    The M-th derivative of the grid function f is obtained by the matrix-
-    vector multiplication
-
-    .. math::
-
-    f^{(m)}_i = D^{(m)}_{ij}f_j
-
-    This function is based on code by Rex Fuzzle
-    https://github.com/RexFuzzle/Python-Library
-
-    References
-    ----------
-    ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
-    Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
-
-    ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
-    Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
-
-    """
-
-    if len(arg) > 3:
-        raise Exception("number of arguments is either two OR three")
-
-    if len(arg) == 2:
-        # unit weight function : arguments are nodes and derivative order
-        x, M = arg[0], arg[1]
-        N = np.size(x)
-        # assert M<N, "Derivative order cannot be larger or equal to number of points"
-        if M >= N:
-            raise Exception(
-                "Derivative order cannot be larger or equal to number of points"
-            )
-        alpha = np.ones(N)
-        B = np.zeros((M, N))
-
-    elif len(arg) == 3:
-        # specified weight function : arguments are nodes, weights and B  matrix
-        x, alpha, B = arg[0], arg[1], arg[2]
-
-    return GeneralPoly(nodes=x, weights=alpha, weight_derivs=B)._dmat
 
 
 def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
@@ -375,13 +330,14 @@ def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     beta = np.delete(beta, 0, 0)
 
     # compute differentiation matrix (b=1)
-    DM = poldif(x, alpha, beta)
+    dm_general = GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+    DM = np.zeros((M, N, N))
     # scale nodes by the factor b
     x = x / b
 
     # scale the matrix by the factor b
     for ell in range(M):
-        DM[ell, :, :] = (b ** (ell + 1)) * DM[ell, :, :]
+        DM[ell, :, :] = (b ** (ell + 1)) * dm_general.diff_mat(ell + 1)
 
     return x, DM
 
@@ -468,12 +424,13 @@ def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
         beta[ell, :] = pow(-0.5, ell + 1) * d
 
     # compute differentiation matrix (b=1)
-    DM = poldif(x, alpha, beta)
+    dm_general = GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+    DM = np.zeros((M, N, N))
 
     # scale nodes by the factor b
     x = x / b
 
     for ell in range(M):
-        DM[ell, :, :] = pow(b, ell + 1) * DM[ell, :, :]
+        DM[ell, :, :] = pow(b, ell + 1) * dm_general.diff_mat(ell + 1)
 
     return x, DM
