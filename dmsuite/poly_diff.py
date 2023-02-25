@@ -225,37 +225,6 @@ def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
 
     This function is based on code by Nikola Mirkov
     http://code.google.com/p/another-chebpy
-
-    Examples
-    --------
-
-    The derivatives of functions is obtained by multiplying the vector of
-    function values by the differentiation matrix. The N-point Chebyshev
-    approximation of the first two derivatives of y = f(x) can be obtained
-    as
-
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
-    >>> import dmsuite as dm
-
-    >>> ncheb = 32; mder = 2; pi = np.pi
-    >>> x, D = dm.chebdif(ncheb, mder)        # first two derivatives
-    >>> D1 = D[0,:,:]                   # first derivative
-    >>> D2 = D[1,:,:]                   # second derivative
-    >>> y = np.sin(2 * pi * x)                      # function at Chebyshev nodes
-    >>> yd = 2 * pi * np.cos(2 * pi * x)        # theoretical first derivative
-    >>> ydd = - 4 * pi ** 2 * np.sin(2 * pi * x)  # theoretical second derivative
-    >>> fig, axe = plt.subplots(3, 1, sharex=True)
-    >>> axe[0].plot(x, y)
-    >>> axe[0].set_ylabel(r'$y$')
-    >>> axe[1].plot(x, yd, '-')
-    >>> axe[1].plot(x, np.dot(D1, y), 'o')
-    >>> axe[1].set_ylabel(r'$y^{\prime}$')
-    >>> axe[2].plot(x, ydd, '-')
-    >>> axe[2].plot(x, np.dot(D2, y), 'o')
-    >>> axe[2].set_xlabel(r'$x$')
-    >>> axe[2].set_ylabel(r'$y^{\prime\prime}$')
-    >>> plt.show()
     """
 
     if mder >= ncheb + 1:
