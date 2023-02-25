@@ -179,19 +179,21 @@ class Chebyshev:
         return C, Z
 
     @cached_property
-    def _dmat(self) -> NDArray:
-        nnodes = self.nodes.size
-        DM = np.zeros((self.max_order, nnodes, nnodes))
-        D = np.eye(nnodes)
+    def _all_dmats(self) -> dict[int, NDArray]:
+        # mapping from order to differentation matrix
+        return {0: np.eye(self.nodes.size)}
+
+    def _dmat(self, order: int) -> NDArray:
+        if order in self._all_dmats:
+            return self._all_dmats[order]
+        dprev = self._dmat(order - 1)
         C, Z = self._helper_matrices
-        for ell in range(self.max_order):
-            # off-diagonals
-            D = (ell + 1) * Z * (C * np.tile(np.diag(D), (nnodes, 1)).T - D)
-            # negative sum trick
-            np.fill_diagonal(D, -np.sum(D, axis=1))
-            # store current D in DM
-            DM[ell, :, :] = D
-        return DM
+        # off-diagonals
+        dnew = order * Z * (C * np.tile(np.diag(dprev), (self.nodes.size, 1)).T - dprev)
+        # negative sum trick
+        np.fill_diagonal(dnew, -np.sum(dnew, axis=1))
+        self._all_dmats[order] = dnew
+        return dnew
 
     def diff_mat(self, order: int) -> NDArray:
         """Differentiation matrix for the order-th derivative.
@@ -217,7 +219,7 @@ class Chebyshev:
         http://code.google.com/p/another-chebpy
         """
         assert 0 < order <= self.max_order
-        return self._dmat[order - 1]
+        return self._dmat(order)
 
 
 @dataclass(frozen=True)
