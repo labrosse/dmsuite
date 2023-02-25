@@ -212,7 +212,13 @@ class Chebyshev:
 
 @dataclass(frozen=True)
 class Hermite:
-    """Hermite collocation differentation matrices."""
+    """Hermite collocation differentation matrices.
+
+    Attributes:
+        degree: Hermite polynomial degree, also the number of nodes.
+        max_order: maximum order of derivative.
+        scale: scaling factor.
+    """
 
     degree: int
     max_order: int
@@ -249,38 +255,11 @@ class Hermite:
         return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta[1:, :])
 
     def diff_mat(self, order: int) -> NDArray:
+        """Differentiation matrix for the order-th derivative.
+
+        The matrix is constructed by differentiating Hermite interpolants.
+        """
         return self.scale**order * self._dmat.diff_mat(order)
-
-
-def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
-    """Hermite collocation differentation matrices.
-
-    Parameters
-    ----------
-
-    N: number of grid points
-    M: maximum order of the derivative, 0 < M < N
-    b: scale parameter, real and positive
-
-    Returns
-    -------
-    x: array of N Hermite nodes which are zeros of the N-th degree
-       Hermite polynomial, scaled by b
-
-    DM: M x N x N array of differentiation matrices
-
-    Notes
-    -----
-    This function returns  M differentiation matrices corresponding to the
-    1st, 2nd, ... M-th derivates on a Hermite grid of N points. The
-    matrices are constructed by differentiating N-th order Hermite
-    interpolants.
-    """
-    hermite = Hermite(degree=N, max_order=M, scale=b)
-    DM = np.zeros((M, N, N))
-    for ell in range(M):
-        DM[ell, :, :] = hermite.diff_mat(order=ell + 1)
-    return hermite.nodes, DM
 
 
 def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
