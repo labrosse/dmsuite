@@ -40,13 +40,10 @@ class GeneralPoly:
         C = np.transpose(C) / C  # matrix with entries c(k)/c(j).
         Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
         np.fill_diagonal(Z, 0.0)
-        X = np.transpose(np.copy(Z))  # X is same as Z', but with ...
-        Xnew = X
 
-        for i in range(0, N):
-            Xnew[i : N - 1, i] = X[i + 1 : N, i]
+        # X is Z.T with diagonal removed
+        X = Z[~np.eye(N, dtype=bool)].reshape(N, -1).T
 
-        X = Xnew[0 : N - 1, :]  # ... diagonal entries removed
         Y = np.ones([N - 1, N])  # initialize Y and D matrices.
         D = np.eye(N)  # Y is matrix of cumulative sums
 
