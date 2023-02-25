@@ -148,9 +148,8 @@ class Chebyshev:
         return np.sin(np.pi * (ncheb - 2 * np.arange(ncheb + 1)) / (2 * ncheb))
 
     @cached_property
-    def _dmat(self) -> NDArray:
+    def _helper_matrices(self) -> tuple[NDArray, NDArray]:
         nnodes = self.nodes.size
-        DM = np.zeros((self.max_order, nnodes, nnodes))
         # indices used for flipping trick
         nn1 = int(np.floor(nnodes / 2))
         nn2 = int(np.ceil(nnodes / 2))
@@ -158,13 +157,11 @@ class Chebyshev:
         # compute theta vector
         th = k * np.pi / self.degree
 
-        # Assemble the differentiation matrices
         T = np.tile(th / 2, (nnodes, 1))
         # trigonometric identity
         DX = 2 * np.sin(T.T + T) * np.sin(T.T - T)
         # flipping trick
         DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))
-        # diagonals of D
         np.fill_diagonal(DX, 1.0)
         DX = DX.T
 
@@ -179,10 +176,14 @@ class Chebyshev:
         Z = 1 / DX
         # with zeros on the diagonal.
         np.fill_diagonal(Z, 0.0)
+        return C, Z
 
-        # initialize differentiation matrices.
+    @cached_property
+    def _dmat(self) -> NDArray:
+        nnodes = self.nodes.size
+        DM = np.zeros((self.max_order, nnodes, nnodes))
         D = np.eye(nnodes)
-
+        C, Z = self._helper_matrices
         for ell in range(self.max_order):
             # off-diagonals
             D = (ell + 1) * Z * (C * np.tile(np.diag(D), (nnodes, 1)).T - D)
