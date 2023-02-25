@@ -262,6 +262,57 @@ class Hermite:
         return self.scale**order * self._dmat.diff_mat(order)
 
 
+@dataclass(frozen=True)
+class Laguerre:
+    """Laguerre collocation differentiation matrices.
+
+    Attributes:
+        degree: Laguerre polynomial degree. There are degree+1 nodes.
+        max_order: maximum order of derivative.
+        scale: scaling factor.
+    """
+
+    degree: int
+    max_order: int
+    scale: float  # FIXME: this should be handled via composition
+
+    def __post_init__(self) -> None:
+        assert 0 < self.max_order <= self.degree  # FIXME: check upper bound
+
+    @cached_property
+    def norm_nodes(self) -> NDArray:
+        """Laguerre roots, unscaled."""
+        nodes = np.zeros(self.degree + 1)
+        nodes[1:] = lagroots(self.degree)
+        return nodes
+
+    @cached_property
+    def nodes(self) -> NDArray:
+        """Scaled nodes."""
+        return self.norm_nodes / self.scale
+
+    @cached_property
+    def _dmat(self) -> GeneralPoly:
+        # this is unscaled (scale == 1)
+        x = self.norm_nodes
+        alpha = np.exp(-x / 2)  # Laguerre weights
+
+        # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
+        beta = np.zeros([self.max_order, x.size])
+        d = np.ones(x.size)
+        for ell in range(0, self.max_order):
+            beta[ell, :] = pow(-0.5, ell + 1) * d
+
+        return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+
+    def diff_mat(self, order: int) -> NDArray:
+        """Differentiation matrix for the order-th derivative.
+
+        The matrix is constructed by differentiating Laguerre interpolants.
+        """
+        return self.scale**order * self._dmat.diff_mat(order)
+
+
 def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
     """Laguerre collocation differentiation matrices.
 
@@ -300,32 +351,8 @@ def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
     >>> xlabel('$x$'), ylabel('$y$, $y^{\prime}$, $y^{\prime\prime}$')
     >>> legend(('$y$', '$y^{\prime}$', '$y^{\prime\prime}$'), loc='upper right')
     """
-    if M >= N - 1:
-        raise Exception("number of nodes must be greater than M - 1")
-
-    if M <= 0:
-        raise Exception("derivative order must be at least 1")
-
-    # compute Laguerre nodes
-    x = np.array([0])  # include origin
-    x = np.append(x, lagroots(N - 1))  # Laguerre roots
-    alpha = np.exp(-x / 2)  # Laguerre weights
-
-    # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
-    beta = np.zeros([M, N])
-    d = np.ones(N)
-
-    for ell in range(0, M):
-        beta[ell, :] = pow(-0.5, ell + 1) * d
-
-    # compute differentiation matrix (b=1)
-    dm_general = GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+    laguerre = Laguerre(N - 1, M, b)
     DM = np.zeros((M, N, N))
-
-    # scale nodes by the factor b
-    x = x / b
-
     for ell in range(M):
-        DM[ell, :, :] = pow(b, ell + 1) * dm_general.diff_mat(ell + 1)
-
-    return x, DM
+        DM[ell, :, :] = laguerre.diff_mat(order=ell + 1)
+    return laguerre.nodes, DM
