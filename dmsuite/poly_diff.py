@@ -23,7 +23,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -55,15 +54,11 @@ class GeneralPoly:
         assert self.weight_derivs.shape[1] == self.nodes.size
 
     @staticmethod
-    def with_unit_weights(
-        nodes: NDArray, max_order: Optional[int] = None
-    ) -> GeneralPoly:
-        if max_order is None:
-            max_order = nodes.size - 1
+    def with_unit_weights(nodes: NDArray) -> GeneralPoly:
         return GeneralPoly(
             nodes,
             weights=np.ones_like(nodes),
-            weight_derivs=np.zeros((max_order, nodes.size)),
+            weight_derivs=np.zeros((nodes.size - 1, nodes.size)),
         )
 
     @cached_property
@@ -230,17 +225,19 @@ class Hermite:
 
     Attributes:
         degree: Hermite polynomial degree, also the number of nodes.
-        max_order: maximum order of derivative.
         scale: scaling factor.
     """
 
     degree: int
-    max_order: int
     scale: float  # FIXME: this should be handled via composition
 
     def __post_init__(self) -> None:
-        assert 0 < self.max_order < self.degree  # FIXME: check upper bound
         assert self.scale > 0.0
+
+    @property
+    def max_order(self) -> int:
+        """Maximum order of derivative."""
+        return self.degree - 1
 
     @cached_property
     def norm_nodes(self) -> NDArray:
@@ -282,16 +279,16 @@ class Laguerre:
 
     Attributes:
         degree: Laguerre polynomial degree. There are degree+1 nodes.
-        max_order: maximum order of derivative.
         scale: scaling factor.
     """
 
     degree: int
-    max_order: int
     scale: float  # FIXME: this should be handled via composition
 
-    def __post_init__(self) -> None:
-        assert 0 < self.max_order <= self.degree  # FIXME: check upper bound
+    @property
+    def max_order(self) -> int:
+        """Maximum order of derivative."""
+        return self.degree
 
     @cached_property
     def norm_nodes(self) -> NDArray:

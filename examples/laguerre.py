@@ -3,7 +3,7 @@ import numpy as np
 
 from dmsuite.poly_diff import Laguerre
 
-lag = Laguerre(degree=31, max_order=2, scale=30.0)
+lag = Laguerre(degree=31, scale=30.0)
 x = lag.nodes
 D1 = lag.diff_mat(1)
 D2 = lag.diff_mat(2)
