@@ -36,7 +36,7 @@ def cheb2bc(
     """
 
     # Get differentiation matrices
-    cheb = Chebyshev(degree=ncheb, max_order=2)
+    cheb = Chebyshev(degree=ncheb)
     xxx = cheb.nodes
     dd0 = np.eye(ncheb + 1, ncheb + 1)
     dd1 = cheb.diff_mat(order=1)

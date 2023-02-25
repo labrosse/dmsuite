@@ -3,7 +3,7 @@ import numpy as np
 
 from dmsuite.poly_diff import Chebyshev
 
-cheb = Chebyshev(degree=32, max_order=2)
+cheb = Chebyshev(degree=32)
 pi = np.pi
 D1 = cheb.diff_mat(order=1)
 D2 = cheb.diff_mat(order=2)

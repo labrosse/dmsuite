@@ -128,15 +128,17 @@ class Chebyshev:
 
     Attributes:
         degree: polynomial degree.
-        max_order: maximum order of the derivative.
     """
 
     degree: int
-    max_order: int
 
     def __post_init__(self) -> None:
         assert self.degree > 0
-        assert 0 < self.max_order <= self.degree
+
+    @property
+    def max_order(self) -> int:
+        """Maximum derivative order."""
+        return self.degree
 
     @cached_property
     def nodes(self) -> NDArray:
