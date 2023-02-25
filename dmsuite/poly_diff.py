@@ -1,4 +1,23 @@
-"""Polynomial-based differentation matrices."""
+"""Polynomial-based differentation matrices.
+
+The m-th derivative of the grid function f is obtained by the matrix-
+vector multiplication
+
+.. math::
+
+f^{(m)}_i = D^{(m)}_{ij}f_j
+
+References
+----------
+..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
+Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
+
+..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
+Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
+
+..[3] R. Baltensperger and M. R. Trummer, Spectral Differencing With A
+Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
+"""
 
 from __future__ import annotations
 
@@ -89,23 +108,8 @@ class GeneralPoly:
         The matrix is constructed by differentiating N-th order Lagrange
         interpolating polynomial that passes through the speficied points.
 
-        The M-th derivative of the grid function f is obtained by the matrix-
-        vector multiplication
-
-        .. math::
-
-        f^{(m)}_i = D^{(m)}_{ij}f_j
-
         This function is based on code by Rex Fuzzle
         https://github.com/RexFuzzle/Python-Library
-
-        References
-        ----------
-        ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
-        Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
-
-        ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
-        Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
         """
         assert 1 <= order <= self.weight_derivs.shape[0]
         return self._dmat[order - 1]
@@ -132,17 +136,9 @@ def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
 
     Notes
     -----
-    This function returns  mder differentiation matrices corresponding to the
-    1st, 2nd, ... mder-th derivates on a Chebyshev grid of ncheb points. The
+    The
     matrices are constructed by differentiating ncheb-th order Chebyshev
     interpolants.
-
-    The mder-th derivative of the grid function f is obtained by the matrix-
-    vector multiplication
-
-    .. math::
-
-    f^{(m)}_i = D^{(m)}_{ij}f_j
 
     The code implements two strategies for enhanced accuracy suggested by
     W. Don and S. Solomonoff :
@@ -159,17 +155,6 @@ def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
 
     This function is based on code by Nikola Mirkov
     http://code.google.com/p/another-chebpy
-
-    References
-    ----------
-    ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
-    Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
-
-    ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
-    Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
-
-    ..[3] R. Baltensperger and M. R. Trummer, Spectral Differencing With A
-    Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
 
     Examples
     --------
@@ -264,10 +249,6 @@ def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
 def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     """Hermite collocation differentation matrices.
 
-    Returns the differentiation matrices D1, D2, .. DM corresponding to the
-    M-th derivative of the function f, at the N Chebyshev nodes in the
-    interval [-1,1].
-
     Parameters
     ----------
 
@@ -288,25 +269,6 @@ def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     1st, 2nd, ... M-th derivates on a Hermite grid of N points. The
     matrices are constructed by differentiating N-th order Hermite
     interpolants.
-
-    The M-th derivative of the grid function f is obtained by the matrix-
-    vector multiplication
-
-    .. math::
-
-    f^{(m)}_i = D^{(m)}_{ij}f_j
-
-    References
-    ----------
-    ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
-    Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
-
-    ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
-    Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
-
-    ..[3] R. Baltensperger and M. R. Trummer, Spectral Differencing With A
-    Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
-
     """
     if M >= N - 1:
         raise Exception("number of nodes must be greater than M - 1")
@@ -361,31 +323,6 @@ def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
        polynomial, scaled by b
 
     DM: M x N x N array of differentiation matrices
-
-    Notes
-    -----
-    This function returns  M differentiation matrices corresponding to the
-    1st, 2nd, ... M-th derivates on a Hermite grid of N points. The
-    matrices are constructed by differentiating N-th order Hermite
-    interpolants.
-
-    The M-th derivative of the grid function f is obtained by the matrix-
-    vector multiplication
-
-    .. math::
-
-    f^{(m)}_i = D^{(m)}_{ij}f_j
-
-    References
-    ----------
-    ..[1] B. Fornberg, Generation of Finite Difference Formulas on Arbitrarily
-    Spaced Grids, Mathematics of Computation 51, no. 184 (1988): 699-706.
-
-    ..[2] J. A. C. Weidemann and S. C. Reddy, A MATLAB Differentiation Matrix
-    Suite, ACM Transactions on Mathematical Software, 26, (2000) : 465-519
-
-    ..[3] R. Baltensperger and M. R. Trummer, Spectral Differencing With A
-    Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
 
     Examples
     --------
