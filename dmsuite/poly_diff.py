@@ -86,19 +86,17 @@ class GeneralPoly:
         # X is Z.T with diagonal removed
         X = Z[~np.eye(N, dtype=bool)].reshape(N, -1).T
 
-        Y = np.ones([N - 1, N])  # initialize Y and D matrices.
-        D = np.eye(N)  # Y is matrix of cumulative sums
+        D = np.eye(N)
+        Y = np.ones_like(D)  # Y is matrix of cumulative sums
 
         DM = np.empty((M, N, N))  # differentiation matrices
 
         for ell in range(1, M + 1):
-            Y = np.cumsum(
-                np.vstack((B[ell - 1, :], ell * (Y[0 : N - 1, :]) * X)), 0
-            )  # diags
+            Y = np.cumsum(np.vstack((B[ell - 1, :], ell * Y[:-1, :] * X)), 0)
             D = (
                 ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)
-            )  # off-diags
-            np.fill_diagonal(D, Y[N - 1, :])
+            )  # off-diag
+            np.fill_diagonal(D, Y[-1, :])  # diag
             DM[ell - 1, :, :] = D
         return DM
 
