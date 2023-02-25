@@ -28,8 +28,7 @@ from functools import cached_property, lru_cache
 import numpy as np
 from numpy.typing import NDArray
 from scipy.linalg import toeplitz
-
-from .roots import herroots, lagroots
+from scipy.special import roots_hermite, roots_laguerre
 
 
 class DiffMatrices(ABC):
@@ -255,7 +254,7 @@ class Hermite(DiffMatrices):
 
     @cached_property
     def nodes(self) -> NDArray:
-        return herroots(self.degree)
+        return roots_hermite(self.degree)[0]
 
     @cached_property
     def _dmat(self) -> GeneralPoly:
@@ -296,7 +295,7 @@ class Laguerre(DiffMatrices):
     @cached_property
     def nodes(self) -> NDArray:
         nodes = np.zeros(self.degree + 1)
-        nodes[1:] = lagroots(self.degree)
+        nodes[1:] = roots_laguerre(self.degree)[0]
         return nodes
 
     @cached_property
