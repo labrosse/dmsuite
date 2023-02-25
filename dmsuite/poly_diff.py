@@ -67,32 +67,35 @@ class GeneralPoly:
         )
 
     @cached_property
-    def _dmat(self) -> NDArray:
-        x = self.nodes
-        alpha = self.weights
-        B = self.weight_derivs
-        N = np.size(x)
-        M = B.shape[0]
-
-        XX = np.tile(x, (N, 1))
+    def _helper_matrices(self) -> tuple[NDArray, NDArray, NDArray]:
+        N = self.nodes.size
+        XX = np.tile(self.nodes, (N, 1))
         DX = np.transpose(XX) - XX  # DX contains entries x(k)-x(j)
         np.fill_diagonal(DX, 1.0)
-        c = alpha * np.prod(DX, 1)  # quantities c(j)
+        c = self.weights * np.prod(DX, 1)  # quantities c(j)
         C = np.tile(c, (N, 1))
         C = np.transpose(C) / C  # matrix with entries c(k)/c(j).
         Z = 1 / DX  # Z contains entries 1/(x(k)-x(j)
         np.fill_diagonal(Z, 0.0)
-
         # X is Z.T with diagonal removed
         X = Z[~np.eye(N, dtype=bool)].reshape(N, -1).T
+        return C, Z, X
+
+    @cached_property
+    def _dmat(self) -> NDArray:
+        N = self.nodes.size
+        C, Z, X = self._helper_matrices
 
         D = np.eye(N)
         Y = np.ones_like(D)  # Y is matrix of cumulative sums
 
-        DM = np.empty((M, N, N))  # differentiation matrices
+        max_order = self.weight_derivs.shape[0]
+        DM = np.empty((max_order, N, N))
 
-        for ell in range(1, M + 1):
-            Y = np.cumsum(np.vstack((B[ell - 1, :], ell * Y[:-1, :] * X)), 0)
+        for ell in range(1, max_order + 1):
+            Y = np.cumsum(
+                np.vstack((self.weight_derivs[ell - 1, :], ell * Y[:-1, :] * X)), 0
+            )
             D = (
                 ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)
             )  # off-diag
