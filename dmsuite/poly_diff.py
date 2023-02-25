@@ -244,14 +244,9 @@ class Hermite(DiffMatrices):
 
     Attributes:
         degree: Hermite polynomial degree, also the number of nodes.
-        scale: scaling factor.
     """
 
     degree: int
-    scale: float  # FIXME: this should be handled via composition
-
-    def __post_init__(self) -> None:
-        assert self.scale > 0.0
 
     @property
     def max_order(self) -> int:
@@ -259,19 +254,12 @@ class Hermite(DiffMatrices):
         return self.degree - 1
 
     @cached_property
-    def norm_nodes(self) -> NDArray:
-        """Hermite roots, unscaled."""
+    def nodes(self) -> NDArray:
         return herroots(self.degree)
 
     @cached_property
-    def nodes(self) -> NDArray:
-        """Scaled nodes."""
-        return self.norm_nodes / self.scale
-
-    @cached_property
     def _dmat(self) -> GeneralPoly:
-        # this is unscaled (scale == 1)
-        x = self.norm_nodes
+        x = self.nodes
         alpha = np.exp(-(x**2) / 2)  # compute Hermite  weights.
 
         # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
@@ -285,7 +273,7 @@ class Hermite(DiffMatrices):
         return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta[1:, :])
 
     def at_order(self, order: int) -> NDArray:
-        return self.scale**order * self._dmat.at_order(order)
+        return self._dmat.at_order(order)
 
 
 @dataclass(frozen=True)
@@ -296,11 +284,9 @@ class Laguerre(DiffMatrices):
 
     Attributes:
         degree: Laguerre polynomial degree. There are degree+1 nodes.
-        scale: scaling factor.
     """
 
     degree: int
-    scale: float  # FIXME: this should be handled via composition
 
     @property
     def max_order(self) -> int:
@@ -308,21 +294,14 @@ class Laguerre(DiffMatrices):
         return self.degree
 
     @cached_property
-    def norm_nodes(self) -> NDArray:
-        """Laguerre roots, unscaled."""
+    def nodes(self) -> NDArray:
         nodes = np.zeros(self.degree + 1)
         nodes[1:] = lagroots(self.degree)
         return nodes
 
     @cached_property
-    def nodes(self) -> NDArray:
-        """Scaled nodes."""
-        return self.norm_nodes / self.scale
-
-    @cached_property
     def _dmat(self) -> GeneralPoly:
-        # this is unscaled (scale == 1)
-        x = self.norm_nodes
+        x = self.nodes
         alpha = np.exp(-x / 2)  # Laguerre weights
 
         # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
@@ -334,7 +313,7 @@ class Laguerre(DiffMatrices):
         return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta)
 
     def at_order(self, order: int) -> NDArray:
-        return self.scale**order * self._dmat.at_order(order)
+        return self._dmat.at_order(order)
 
 
 @dataclass(frozen=True)
