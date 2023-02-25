@@ -332,24 +332,6 @@ def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
        polynomial, scaled by b
 
     DM: M x N x N array of differentiation matrices
-
-    Examples
-    --------
-
-    The derivatives of functions is obtained by multiplying the vector of
-    function values by the differentiation matrix. The N-point Laguerre
-    approximation of the first two derivatives of y = f(x) can be obtained
-    as
-
-    >>> N = 32; M = 2; b = 30
-    >>> import dmsuite as dm
-    >>> x, D = dm.lagdif(N, M, b)      # first two derivatives
-    >>> D1 = D[0,:,:]                   # first derivative
-    >>> D2 = D[1,:,:]                   # second derivative
-    >>> y = np.exp(-x)                  # function at Laguerre nodes
-    >>> plot(x, y, 'r', x, -D1.dot(y), 'g', x, D2.dot(y), 'b')
-    >>> xlabel('$x$'), ylabel('$y$, $y^{\prime}$, $y^{\prime\prime}$')
-    >>> legend(('$y$', '$y^{\prime}$', '$y^{\prime\prime}$'), loc='upper right')
     """
     laguerre = Laguerre(N - 1, M, b)
     DM = np.zeros((M, N, N))
