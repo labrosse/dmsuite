@@ -39,8 +39,8 @@ def cheb2bc(
     cheb = Chebyshev(degree=ncheb)
     xxx = cheb.nodes
     dd0 = np.eye(ncheb + 1, ncheb + 1)
-    dd1 = cheb.diff_mat(order=1)
-    dd2 = cheb.diff_mat(order=2)
+    dd1 = cheb.at_order(1)
+    dd2 = cheb.at_order(2)
 
     # extract boundary condition coefficients
     aa1 = bcs[0][0]

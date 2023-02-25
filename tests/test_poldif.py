@@ -14,5 +14,5 @@ def test_poldif5() -> None:
     dmat = GeneralPoly.with_unit_weights(nodes=np.arange(0, 1.2, 0.2))
     computed = np.zeros_like(expected)
     for i in range(5):
-        computed[i] = dmat.diff_mat(i + 1)
+        computed[i] = dmat.at_order(i + 1)
     assert np.allclose(computed, expected)

@@ -9,6 +9,6 @@ def test_chebdif4() -> None:
     cheb = Chebyshev(degree=4)
     computed = np.zeros((cheb.max_order, cheb.nodes.size, cheb.nodes.size))
     for order in range(1, cheb.max_order + 1):
-        computed[order - 1] = cheb.diff_mat(order)
+        computed[order - 1] = cheb.at_order(order)
     assert np.allclose(cheb.nodes, expected[0])
     assert np.allclose(computed, expected[1])

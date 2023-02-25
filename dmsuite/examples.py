@@ -21,7 +21,7 @@ def orrsom(ncheb: int, rey: float) -> np.complexfloating:
     meig : Eigenvalue with largest real part
     """
     # Compute second derivative
-    ddm = Chebyshev(degree=ncheb + 2).diff_mat(order=2)
+    ddm = Chebyshev(degree=ncheb + 2).at_order(2)
     # Enforce Dirichlet BCs
     dd2 = ddm[1 : ncheb + 2, 1 : ncheb + 2]
     print("dd2 =", dd2)

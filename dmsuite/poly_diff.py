@@ -21,6 +21,7 @@ Twist, SIAM Journal on Scientific Computing 24, (2002) : 1465-1487
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
 
@@ -31,8 +32,21 @@ from scipy.linalg import toeplitz
 from .roots import herroots, lagroots
 
 
+class DiffMatrices(ABC):
+    """Differentiation matrices."""
+
+    @property
+    @abstractmethod
+    def nodes(self) -> NDArray:
+        """Position of nodes."""
+
+    @abstractmethod
+    def at_order(self, order: int) -> NDArray:
+        """Differentiation matrix for the order-th derivative."""
+
+
 @dataclass(frozen=True)
-class GeneralPoly:
+class GeneralPoly(DiffMatrices):
     """General differentiation matrices.
 
     The matrix is constructed by differentiating N-th order Lagrange
@@ -48,7 +62,7 @@ class GeneralPoly:
             derivative of log(weights(x)) at the j-th node.
     """
 
-    nodes: NDArray
+    at_nodes: NDArray
     weights: NDArray
     weight_derivs: NDArray
 
@@ -66,6 +80,10 @@ class GeneralPoly:
             weights=np.ones_like(nodes),
             weight_derivs=np.zeros((nodes.size - 1, nodes.size)),
         )
+
+    @property
+    def nodes(self) -> NDArray:
+        return self.at_nodes
 
     @cached_property
     def _helper_matrices(self) -> tuple[NDArray, NDArray, NDArray]:
@@ -115,15 +133,14 @@ class GeneralPoly:
         self._all_dmats[order] = ynew, dnew
         return ynew, dnew
 
-    def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative."""
+    def at_order(self, order: int) -> NDArray:
         assert 1 <= order <= self.weight_derivs.shape[0]
         return self._dmats(order)[1]
 
 
 @dataclass(frozen=True)
-class Chebyshev:
-    """Chebyshev collocation differentation matrices.
+class Chebyshev(DiffMatrices):
+    """Chebyshev collocation differentation matrices on [-1, 1].
 
     The matrices are constructed by differentiating ncheb-th order Chebyshev
     interpolants.
@@ -160,7 +177,6 @@ class Chebyshev:
 
     @cached_property
     def nodes(self) -> NDArray:
-        """Chebyshev nodes in [-1, 1]."""
         ncheb = self.degree
         # obvious way
         # np.cos(np.pi * np.arange(ncheb+1) / ncheb)
@@ -215,14 +231,13 @@ class Chebyshev:
         self._all_dmats[order] = dnew
         return dnew
 
-    def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative."""
+    def at_order(self, order: int) -> NDArray:
         assert 0 < order <= self.max_order
         return self._dmat(order)
 
 
 @dataclass(frozen=True)
-class Hermite:
+class Hermite(DiffMatrices):
     """Hermite collocation differentation matrices.
 
     The matrix is constructed by differentiating Hermite interpolants.
@@ -267,15 +282,14 @@ class Hermite:
         for ell in range(2, self.max_order + 1):
             beta[ell, :] = -x * beta[ell - 1, :] - (ell - 1) * beta[ell - 2, :]
 
-        return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta[1:, :])
+        return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta[1:, :])
 
-    def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative."""
-        return self.scale**order * self._dmat.diff_mat(order)
+    def at_order(self, order: int) -> NDArray:
+        return self.scale**order * self._dmat.at_order(order)
 
 
 @dataclass(frozen=True)
-class Laguerre:
+class Laguerre(DiffMatrices):
     """Laguerre collocation differentiation matrices.
 
     The matrix is constructed by differentiating Laguerre interpolants.
@@ -317,8 +331,7 @@ class Laguerre:
         for ell in range(0, self.max_order):
             beta[ell, :] = pow(-0.5, ell + 1) * d
 
-        return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+        return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta)
 
-    def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix for the order-th derivative."""
-        return self.scale**order * self._dmat.diff_mat(order)
+    def at_order(self, order: int) -> NDArray:
+        return self.scale**order * self._dmat.at_order(order)

@@ -9,6 +9,6 @@ def test_herdif4() -> None:
     herm = Hermite(degree=5, scale=1.0)
     computed = np.zeros((3, herm.degree, herm.degree))
     for order in range(1, 4):
-        computed[order - 1] = herm.diff_mat(order)
+        computed[order - 1] = herm.at_order(order)
     assert np.allclose(herm.nodes, expected[0])
     assert np.allclose(computed, expected[1])
