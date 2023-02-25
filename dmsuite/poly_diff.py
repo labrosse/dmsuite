@@ -115,6 +115,76 @@ class GeneralPoly:
         return self._dmat[order - 1]
 
 
+@dataclass(frozen=True)
+class Chebyshev:
+    """Chebyshev collocation differentation matrices.
+
+    Attributes:
+        degree: polynomial degree.
+        max_order: maximum order of the derivative.
+    """
+
+    degree: int
+    max_order: int
+
+    @cached_property
+    def nodes(self) -> NDArray:
+        ncheb = self.degree
+        # obvious way
+        # np.cos(np.pi * np.arange(ncheb+1) / ncheb)
+        # W&R way
+        return np.sin(np.pi * (ncheb - 2 * np.arange(ncheb + 1)) / (2 * ncheb))
+
+    @cached_property
+    def _dmat(self) -> NDArray:
+        nnodes = self.nodes.size
+        DM = np.zeros((self.max_order, nnodes, nnodes))
+        # indices used for flipping trick
+        nn1 = int(np.floor(nnodes / 2))
+        nn2 = int(np.ceil(nnodes / 2))
+        k = np.arange(nnodes)
+        # compute theta vector
+        th = k * np.pi / self.degree
+
+        # Assemble the differentiation matrices
+        T = np.tile(th / 2, (nnodes, 1))
+        # trigonometric identity
+        DX = 2 * np.sin(T.T + T) * np.sin(T.T - T)
+        # flipping trick
+        DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))
+        # diagonals of D
+        np.fill_diagonal(DX, 1.0)
+        DX = DX.T
+
+        # matrix with entries c(k)/c(j)
+        C = toeplitz((-1.0) ** k)
+        C[0, :] *= 2
+        C[-1, :] *= 2
+        C[:, 0] *= 0.5
+        C[:, -1] *= 0.5
+
+        # Z contains entries 1/(x(k)-x(j))
+        Z = 1 / DX
+        # with zeros on the diagonal.
+        np.fill_diagonal(Z, 0.0)
+
+        # initialize differentiation matrices.
+        D = np.eye(nnodes)
+
+        for ell in range(self.max_order):
+            # off-diagonals
+            D = (ell + 1) * Z * (C * np.tile(np.diag(D), (nnodes, 1)).T - D)
+            # negative sum trick
+            np.fill_diagonal(D, -np.sum(D, axis=1))
+            # store current D in DM
+            DM[ell, :, :] = D
+        return DM
+
+    def diff_mat(self, order: int) -> NDArray:
+        """Differentiation matrix."""
+        return self._dmat[order - 1]
+
+
 def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
     """Chebyshev collocation differentation matrices.
 
@@ -194,56 +264,8 @@ def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
     if mder <= 0:
         raise Exception("derivative order must be at least 1")
 
-    DM = np.zeros((mder, ncheb + 1, ncheb + 1))
-    # indices used for flipping trick
-    nn1 = int(np.floor((ncheb + 1) / 2))
-    nn2 = int(np.ceil((ncheb + 1) / 2))
-    k = np.arange(ncheb + 1)
-    # compute theta vector
-    th = k * np.pi / ncheb
-
-    # Compute the Chebyshev points
-
-    # obvious way
-    # x = np.cos(np.pi*np.linspace(ncheb-1,0,ncheb)/(ncheb-1))
-    # W&R way
-    x = np.sin(np.pi * (ncheb - 2 * np.linspace(ncheb, 0, ncheb + 1)) / (2 * ncheb))
-    x = x[::-1]
-
-    # Assemble the differentiation matrices
-    T = np.tile(th / 2, (ncheb + 1, 1))
-    # trigonometric identity
-    DX = 2 * np.sin(T.T + T) * np.sin(T.T - T)
-    # flipping trick
-    DX[nn1:, :] = -np.flipud(np.fliplr(DX[0:nn2, :]))
-    # diagonals of D
-    DX[range(ncheb + 1), range(ncheb + 1)] = 1.0
-    DX = DX.T
-
-    # matrix with entries c(k)/c(j)
-    C = toeplitz((-1.0) ** k)
-    C[0, :] *= 2
-    C[-1, :] *= 2
-    C[:, 0] *= 0.5
-    C[:, -1] *= 0.5
-
-    # Z contains entries 1/(x(k)-x(j))
-    Z = 1 / DX
-    # with zeros on the diagonal.
-    Z[range(ncheb + 1), range(ncheb + 1)] = 0.0
-
-    # initialize differentiation matrices.
-    D = np.eye(ncheb + 1)
-
-    for ell in range(mder):
-        # off-diagonals
-        D = (ell + 1) * Z * (C * np.tile(np.diag(D), (ncheb + 1, 1)).T - D)
-        # negative sum trick
-        D[range(ncheb + 1), range(ncheb + 1)] = -np.sum(D, axis=1)
-        # store current D in DM
-        DM[ell, :, :] = D
-
-    return x, DM
+    cheb = Chebyshev(degree=ncheb, max_order=mder)
+    return cheb.nodes, cheb._dmat
 
 
 def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
