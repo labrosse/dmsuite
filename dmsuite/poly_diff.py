@@ -82,26 +82,37 @@ class GeneralPoly:
         return C, Z, X
 
     @cached_property
-    def _dmat(self) -> NDArray:
+    def _all_dmats(self) -> dict[int, tuple[NDArray, NDArray]]:
+        # mapping from order to (Y, D) tuple
         N = self.nodes.size
-        C, Z, X = self._helper_matrices
 
-        D = np.eye(N)
-        Y = np.ones_like(D)  # Y is matrix of cumulative sums
+        D = np.eye(N)  # differentation matrix
+        Y = np.ones_like(D)  # matrix of cumulative sums
+        return {0: (Y, D)}
 
         max_order = self.weight_derivs.shape[0]
         DM = np.empty((max_order, N, N))
 
         for ell in range(1, max_order + 1):
-            Y = np.cumsum(
-                np.vstack((self.weight_derivs[ell - 1, :], ell * Y[:-1, :] * X)), 0
-            )
-            D = (
-                ell * Z * (C * np.transpose(np.tile(np.diag(D), (N, 1))) - D)
-            )  # off-diag
-            np.fill_diagonal(D, Y[-1, :])  # diag
             DM[ell - 1, :, :] = D
         return DM
+
+    def _dmats(self, order: int) -> tuple[NDArray, NDArray]:
+        if order in self._all_dmats:
+            return self._all_dmats[order]
+        yprev, dprev = self._dmats(order - 1)
+        C, Z, X = self._helper_matrices
+        ynew = np.cumsum(
+            np.vstack((self.weight_derivs[order - 1, :], order * yprev[:-1, :] * X)), 0
+        )
+        dnew = (
+            order
+            * Z
+            * (C * np.transpose(np.tile(np.diag(dprev), (self.nodes.size, 1))) - dprev)
+        )  # off-diag
+        np.fill_diagonal(dnew, ynew[-1, :])  # diag
+        self._all_dmats[order] = ynew, dnew
+        return ynew, dnew
 
     def diff_mat(self, order: int) -> NDArray:
         """Differentiation matrix for the order-th derivative.
@@ -113,7 +124,7 @@ class GeneralPoly:
         https://github.com/RexFuzzle/Python-Library
         """
         assert 1 <= order <= self.weight_derivs.shape[0]
-        return self._dmat[order - 1]
+        return self._dmats(order)[1]
 
 
 @dataclass(frozen=True)
