@@ -5,7 +5,7 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from .poly_diff import chebdif
+from .poly_diff import Chebyshev
 
 
 def cheb2bc(
@@ -36,10 +36,11 @@ def cheb2bc(
     """
 
     # Get differentiation matrices
-    xxx, ddm = chebdif(ncheb, 2)
+    cheb = Chebyshev(degree=ncheb, max_order=2)
+    xxx = cheb.nodes
     dd0 = np.eye(ncheb + 1, ncheb + 1)
-    dd1 = ddm[0, :, :]
-    dd2 = ddm[1, :, :]
+    dd1 = cheb.diff_mat(order=1)
+    dd2 = cheb.diff_mat(order=2)
 
     # extract boundary condition coefficients
     aa1 = bcs[0][0]

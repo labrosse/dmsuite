@@ -4,7 +4,7 @@ import numpy as np
 from scipy import linalg
 
 from .cheb_bc import cheb4c
-from .poly_diff import chebdif
+from .poly_diff import Chebyshev
 
 
 def orrsom(ncheb: int, rey: float) -> np.complexfloating:
@@ -21,9 +21,9 @@ def orrsom(ncheb: int, rey: float) -> np.complexfloating:
     meig : Eigenvalue with largest real part
     """
     # Compute second derivative
-    ddm = chebdif(ncheb + 2, 2)[1]
+    ddm = Chebyshev(degree=ncheb + 2, max_order=2).diff_mat(order=2)
     # Enforce Dirichlet BCs
-    dd2 = ddm[1, 1 : ncheb + 2, 1 : ncheb + 2]
+    dd2 = ddm[1 : ncheb + 2, 1 : ncheb + 2]
     print("dd2 =", dd2)
     # Compute fourth derivative
     xxt, dd4 = cheb4c(ncheb + 2)

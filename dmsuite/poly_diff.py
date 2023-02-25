@@ -127,8 +127,13 @@ class Chebyshev:
     degree: int
     max_order: int
 
+    def __post_init__(self) -> None:
+        assert self.degree > 0
+        assert 0 < self.max_order <= self.degree
+
     @cached_property
     def nodes(self) -> NDArray:
+        """Chebyshev nodes in [-1, 1]."""
         ncheb = self.degree
         # obvious way
         # np.cos(np.pi * np.arange(ncheb+1) / ncheb)
@@ -181,60 +186,30 @@ class Chebyshev:
         return DM
 
     def diff_mat(self, order: int) -> NDArray:
-        """Differentiation matrix."""
+        """Differentiation matrix for the order-th derivative.
+
+        The
+        matrices are constructed by differentiating ncheb-th order Chebyshev
+        interpolants.
+
+        The code implements two strategies for enhanced accuracy suggested by
+        W. Don and S. Solomonoff :
+
+        (a) the use of trigonometric  identities to avoid the computation of
+        differences x(k)-x(j)
+
+        (b) the use of the "flipping trick"  which is necessary since sin t can
+        be computed to high relative precision when t is small whereas sin (pi-t)
+        cannot.
+
+        It may, in fact, be slightly better not to implement the strategies
+        (a) and (b). Please consult [3] for details.
+
+        This function is based on code by Nikola Mirkov
+        http://code.google.com/p/another-chebpy
+        """
+        assert 0 < order <= self.max_order
         return self._dmat[order - 1]
-
-
-def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
-    """Chebyshev collocation differentation matrices.
-
-    Returns the differentiation matrices D1, D2, .. Dmder corresponding to the
-    mder-th derivative of the function f, at the ncheb Chebyshev nodes in the
-    interval [-1,1].
-
-    Parameters
-    ----------
-
-    ncheb: polynomial order. ncheb + 1 collocation points
-    mder: maximum order of the derivative, 0 < mder <= ncheb - 1
-
-    Returns
-    -------
-    x  : array of (ncheb + 1) Chebyshev points
-
-    DM : mder x (ncheb+1) x (ncheb+1) differentiation matrices
-
-    Notes
-    -----
-    The
-    matrices are constructed by differentiating ncheb-th order Chebyshev
-    interpolants.
-
-    The code implements two strategies for enhanced accuracy suggested by
-    W. Don and S. Solomonoff :
-
-    (a) the use of trigonometric  identities to avoid the computation of
-    differences x(k)-x(j)
-
-    (b) the use of the "flipping trick"  which is necessary since sin t can
-    be computed to high relative precision when t is small whereas sin (pi-t)
-    cannot.
-
-    It may, in fact, be slightly better not to implement the strategies
-    (a) and (b). Please consult [3] for details.
-
-    This function is based on code by Nikola Mirkov
-    http://code.google.com/p/another-chebpy
-    """
-
-    if mder >= ncheb + 1:
-        raise Exception("number of nodes must be greater than mder")
-
-    if mder <= 0:
-        raise Exception("derivative order must be at least 1")
-
-    cheb = Chebyshev(degree=ncheb, max_order=mder)
-    return cheb.nodes, cheb._dmat
 
 
 def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
