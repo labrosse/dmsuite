@@ -210,6 +210,48 @@ class Chebyshev:
         return self._dmat[order - 1]
 
 
+@dataclass(frozen=True)
+class Hermite:
+    """Hermite collocation differentation matrices."""
+
+    degree: int
+    max_order: int
+    scale: float  # FIXME: this should be handled via composition
+
+    def __post_init__(self) -> None:
+        assert 0 < self.max_order < self.degree  # FIXME: check upper bound
+        assert self.scale > 0.0
+
+    @cached_property
+    def norm_nodes(self) -> NDArray:
+        """Hermite roots, unscaled."""
+        return herroots(self.degree)
+
+    @cached_property
+    def nodes(self) -> NDArray:
+        """Scaled nodes."""
+        return self.norm_nodes / self.scale
+
+    @cached_property
+    def _dmat(self) -> GeneralPoly:
+        # this is unscaled (scale == 1)
+        x = self.norm_nodes
+        alpha = np.exp(-(x**2) / 2)  # compute Hermite  weights.
+
+        # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
+        beta = np.zeros([self.max_order + 1, self.degree])
+        beta[0, :] = np.ones(self.degree)
+        beta[1, :] = -x
+
+        for ell in range(2, self.max_order + 1):
+            beta[ell, :] = -x * beta[ell - 1, :] - (ell - 1) * beta[ell - 2, :]
+
+        return GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta[1:, :])
+
+    def diff_mat(self, order: int) -> NDArray:
+        return self.scale**order * self._dmat.diff_mat(order)
+
+
 def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     """Hermite collocation differentation matrices.
 
@@ -234,38 +276,11 @@ def herdif(N: int, M: int, b: float = 1.0) -> tuple[NDArray, NDArray]:
     matrices are constructed by differentiating N-th order Hermite
     interpolants.
     """
-    if M >= N - 1:
-        raise Exception("number of nodes must be greater than M - 1")
-
-    if M <= 0:
-        raise Exception("derivative order must be at least 1")
-
-    x = herroots(N)  # compute Hermite nodes
-    alpha = np.exp(-x * x / 2)  # compute Hermite  weights.
-
-    beta = np.zeros([M + 1, N])
-
-    # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
-    beta[0, :] = np.ones(N)
-    beta[1, :] = -x
-
-    for ell in range(2, M + 1):
-        beta[ell, :] = -x * beta[ell - 1, :] - (ell - 1) * beta[ell - 2, :]
-
-    # remove initialising row from beta
-    beta = np.delete(beta, 0, 0)
-
-    # compute differentiation matrix (b=1)
-    dm_general = GeneralPoly(nodes=x, weights=alpha, weight_derivs=beta)
+    hermite = Hermite(degree=N, max_order=M, scale=b)
     DM = np.zeros((M, N, N))
-    # scale nodes by the factor b
-    x = x / b
-
-    # scale the matrix by the factor b
     for ell in range(M):
-        DM[ell, :, :] = (b ** (ell + 1)) * dm_general.diff_mat(ell + 1)
-
-    return x, DM
+        DM[ell, :, :] = hermite.diff_mat(order=ell + 1)
+    return hermite.nodes, DM
 
 
 def lagdif(N: int, M: int, b: float) -> tuple[NDArray, NDArray]:
