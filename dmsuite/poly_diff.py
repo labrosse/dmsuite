@@ -1,6 +1,7 @@
 """Polynomial-based differentation matrices."""
 
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -25,7 +26,8 @@ class GeneralPoly:
     weights: NDArray
     weight_derivs: NDArray
 
-    def diff(self) -> NDArray:
+    @cached_property
+    def _dmat(self) -> NDArray:
         x = self.nodes
         alpha = self.weights
         B = self.weight_derivs
@@ -59,6 +61,10 @@ class GeneralPoly:
             np.fill_diagonal(D, Y[N - 1, :])
             DM[ell - 1, :, :] = D
         return DM
+
+    def diff_mat(self, order: int) -> NDArray:
+        """Differentiation matrix at given order."""
+        return self._dmat[order - 1]
 
 
 def poldif(*arg: Any) -> NDArray:
@@ -147,7 +153,7 @@ def poldif(*arg: Any) -> NDArray:
         # specified weight function : arguments are nodes, weights and B  matrix
         x, alpha, B = arg[0], arg[1], arg[2]
 
-    return GeneralPoly(nodes=x, weights=alpha, weight_derivs=B).diff()
+    return GeneralPoly(nodes=x, weights=alpha, weight_derivs=B)._dmat
 
 
 def chebdif(ncheb: int, mder: int) -> tuple[NDArray, NDArray]:
