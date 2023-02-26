@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, lru_cache
 
 import numpy as np
 from numpy.typing import NDArray
@@ -97,6 +97,46 @@ class Fourier(DiffMatrices):
         return toeplitz(col1, row1)
 
 
+@dataclass(frozen=True)
+class Sinc(DiffMatrices):
+    """Spectral sinc differentiation matrices."""
+
+    degree: int
+    width: float
+
+    @cached_property
+    def nodes(self) -> NDArray:
+        return np.linspace(-self.width / 2, self.width / 2, self.degree + 1)
+
+    @cached_property
+    def _tva(self) -> NDArray:
+        return np.pi * np.arange(1, self.degree + 1)
+
+    @cached_property
+    def _all_sigma(self) -> dict[int, NDArray]:
+        return {0: np.zeros_like(self._tva)}
+
+    def _sigma(self, order: int) -> NDArray:
+        if order in self._all_sigma:
+            return self._all_sigma[order]
+        sigma_prev = self._sigma(order - 1)
+        sigma = (
+            -order * sigma_prev + np.imag(np.exp(1j * self._tva) * 1j**order)
+        ) / self._tva
+        self._all_sigma[order] = sigma
+        return sigma
+
+    @lru_cache
+    def at_order(self, order: int) -> NDArray:
+        sigma = self._sigma(order)
+        col = (np.pi * self.degree / self.width) ** order * np.concatenate(
+            [[np.imag(1j ** (order + 1)) / (order + 1)], sigma]
+        )
+        row = (-1) ** order * col
+        row[0] = col[0]
+        return toeplitz(col, row)
+
+
 def sincdif(npol: int, mder: int, step: float) -> tuple[NDArray, NDArray]:
     """sinc differentiation matrices
 
@@ -110,18 +150,8 @@ def sincdif(npol: int, mder: int, step: float) -> tuple[NDArray, NDArray]:
     ddm: ddm[l, 0:npol, 0:npol] is the l-th order differentiation matrix
              with l=1..mder
     """
-    dmm = np.zeros((mder, npol + 1, npol + 1))
-    knu = np.arange(1, npol + 1)
-    tva = knu * np.pi
-    xxt = step * np.arange(-npol / 2, npol / 2 + 1.0)
-    sigma = np.zeros(knu.shape)
-    for ell in range(1, mder + 1):
-        sigma = (-ell * sigma + np.imag(np.exp(1j * tva) * 1j**ell)) / tva
-        col = (np.pi / step) ** ell * np.concatenate(
-            [[np.imag(1j ** (ell + 1)) / (ell + 1)], sigma]
-        )
-        row = (-1) ** ell * col
-        row[0] = col[0]
-        dmm[ell - 1, :, :] = toeplitz(col, row)
-
-    return xxt, dmm
+    sinc = Sinc(degree=npol, width=step * npol)
+    dmat = np.zeros((mder, sinc.nodes.size, sinc.nodes.size))
+    for order in range(1, mder + 1):
+        dmat[order - 1] = sinc.at_order(order)
+    return sinc.nodes, dmat
