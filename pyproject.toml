@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dmsuite"
 dynamic = ["version"]
-description = "Differenciation matrices"
+description = "Differentiation matrices"
 readme = "README.rst"
 authors = [
     {name = "Adrien Morison", email = "adrien.morison@gmail.com"},
