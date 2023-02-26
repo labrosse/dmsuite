@@ -14,7 +14,25 @@ from .poly_diff import DiffMatrices
 
 @dataclass(frozen=True)
 class Fourier(DiffMatrices):
-    """Fourier spectral differentiation matrices."""
+    """Fourier spectral differentiation matrices.
+
+    Explicit formulas are used to compute the matrices for m=1 and 2.
+    A discrete Fouier approach is employed for m>2. The program
+    computes the first column and first row and then uses the
+    toeplitz command to create the matrix.
+
+    For mder=1 and 2 the code implements a "flipping trick" to
+    improve accuracy suggested by W. Don and A. Solomonoff in
+    SIAM J. Sci. Comp. Vol. 6, pp. 1253--1268 (1994).
+    The flipping trick is necesary since sin t can be computed to high
+    relative precision when t is small whereas sin (pi-t) cannot.
+
+    S.C. Reddy, J.A.C. Weideman 1998.  Corrected for MATLAB R13
+    by JACW, April 2003.
+
+    Attributes:
+        nnodes: number of equispaced grid points in [0, 2pi).
+    """
 
     nnodes: int
 
@@ -85,40 +103,6 @@ class Fourier(DiffMatrices):
                 col1 = np.hstack(([0], col1[1 : self.nnodes + 1]))
                 row1 = -col1
         return toeplitz(col1, row1)
-
-
-def fourdif(nfou: int, mder: int) -> tuple[NDArray, NDArray]:
-    """
-    Fourier spectral differentiation.
-
-    Spectral differentiation matrix on a grid with nfou equispaced points in [0,2pi)
-
-    INPUT
-    -----
-    nfou: Size of differentiation matrix.
-    mder: Derivative required (non-negative integer)
-
-    OUTPUT
-    -------
-    xxt: Equispaced points 0, 2pi/nfou, 4pi/nfou, ... , (nfou-1)2pi/nfou
-    ddm: mder'th order differentiation matrix
-
-    Explicit formulas are used to compute the matrices for m=1 and 2.
-    A discrete Fouier approach is employed for m>2. The program
-    computes the first column and first row and then uses the
-    toeplitz command to create the matrix.
-
-    For mder=1 and 2 the code implements a "flipping trick" to
-    improve accuracy suggested by W. Don and A. Solomonoff in
-    SIAM J. Sci. Comp. Vol. 6, pp. 1253--1268 (1994).
-    The flipping trick is necesary since sin t can be computed to high
-    relative precision when t is small whereas sin (pi-t) cannot.
-
-    S.C. Reddy, J.A.C. Weideman 1998.  Corrected for MATLAB R13
-    by JACW, April 2003.
-    """
-    fourier = Fourier(nnodes=nfou)
-    return fourier.nodes, fourier.at_order(mder)
 
 
 def sincdif(npol: int, mder: int, step: float) -> tuple[NDArray, NDArray]:
