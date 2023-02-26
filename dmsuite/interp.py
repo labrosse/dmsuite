@@ -3,6 +3,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from .poly_diff import Chebyshev
+
 
 def chebint(ffk: NDArray, xxx: NDArray) -> NDArray:
     """Barycentric polynomial interpolation on Chebyshev nodes.
@@ -32,8 +34,8 @@ def chebint(ffk: NDArray, xxx: NDArray) -> NDArray:
 
     nnx = xxx.shape[0]
 
-    # compute Chebyshev points
-    xxk = np.sin(np.pi * (2 * np.linspace(ncheb, 0, ncheb + 1) - ncheb) / (2 * ncheb))
+    # Chebyshev points
+    xxk = Chebyshev(degree=ncheb).nodes
     # weights for Chebyshev formula
     wgt = (-1.0) ** np.arange(ncheb + 1)
     wgt[0] /= 2
