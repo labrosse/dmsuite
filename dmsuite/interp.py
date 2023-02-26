@@ -15,6 +15,12 @@ from .poly_diff import Chebyshev
 class ChebyshevSampling:
     """Barycentric polynomial interpolation on Chebyshev nodes.
 
+    The code implements the barycentric formula; see page 252 in
+    P. Henrici, Essentials of Numerical Analysis, Wiley, 1982.
+    (Note that if some fk > 1/eps, with eps the machine epsilon,
+    the value of eps in the code may have to be reduced.)
+    See also J.A.C. Weideman, S.C. Reddy 1998.
+
     Attributes:
         degree: degree of Chebyshev polynomials.
         positions: positions of [-1, 1] to sample.
@@ -38,33 +44,12 @@ class ChebyshevSampling:
         return wgt, dif
 
     def apply_on(self, values: NDArray) -> NDArray:
-        """Apply desired sampling on values known at Chebyshev nodes."""
+        """Apply desired sampling on values.
+
+        The `values` should be known at the Chebyshev nodes
+            x(k) = cos(k * pi / N), k = 0...N
+        where N = degree + 1.
+        """
         assert values.size == self.degree + 1
         wgt, dif = self._wgt_dif
         return np.dot(dif, wgt * values) / np.dot(dif, wgt)
-
-
-def chebint(ffk: NDArray, xxx: NDArray) -> NDArray:
-    """Barycentric polynomial interpolation on Chebyshev nodes.
-
-    Polynomial interpolant of the data ffk, xxk (Chebyshev nodes)
-
-    Two or more data points are assumed.
-
-    Input:
-    ffk: Vector of y-coordinates of data, at Chebyshev points
-        x(k) = cos(k * pi / N), k = 0...N.
-    xxx: Vector of x-values where polynomial interpolant is to be evaluated.
-
-    Output:
-    fout:    Vector of interpolated values.
-
-    The code implements the barycentric formula; see page 252 in
-    P. Henrici, Essentials of Numerical Analysis, Wiley, 1982.
-    (Note that if some fk > 1/eps, with eps the machine epsilon,
-    the value of eps in the code may have to be reduced.)
-
-    J.A.C. Weideman, S.C. Reddy 1998
-    """
-    ncheb = ffk.shape[0] - 1
-    return ChebyshevSampling(degree=ncheb, positions=xxx).apply_on(ffk)
