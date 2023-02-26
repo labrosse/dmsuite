@@ -41,17 +41,12 @@ class Fourier(DiffMatrices):
         return np.linspace(0.0, 2 * np.pi, self.nnodes, endpoint=False)
 
     def at_order(self, order: int) -> NDArray:
-        # grid points
-        # grid spacing
         dhh = 2 * np.pi / self.nnodes
-
         nn1 = int(np.floor((self.nnodes - 1) / 2.0))
         nn2 = int(np.ceil((self.nnodes - 1) / 2.0))
+
         if order == 0:
-            # compute first column of zeroth derivative matrix, which is identity
-            col1 = np.zeros(self.nnodes)
-            col1[0] = 1
-            row1 = np.copy(col1)
+            return np.eye(self.nnodes)
 
         elif order == 1:
             # compute first column of 1st derivative matrix
@@ -86,11 +81,8 @@ class Fourier(DiffMatrices):
 
         else:
             # employ FFT to compute 1st column of matrix for order > 2
-            nfo1 = int(np.floor((self.nnodes - 1) / 2.0))
             nfo2 = -self.nnodes / 2 * (order + 1) % 2 * np.ones((self.nnodes + 1) % 2)
-            mwave = 1j * np.concatenate(
-                (np.arange(nfo1 + 1), nfo2, np.arange(-nfo1, 0))
-            )
+            mwave = 1j * np.concatenate((np.arange(nn1 + 1), nfo2, np.arange(-nn1, 0)))
             col1 = np.real(
                 np.fft.ifft(
                     mwave**order
@@ -100,7 +92,7 @@ class Fourier(DiffMatrices):
             if order % 2 == 0:
                 row1 = col1
             else:
-                col1 = np.hstack(([0], col1[1 : self.nnodes + 1]))
+                col1[0] = 0.0
                 row1 = -col1
         return toeplitz(col1, row1)
 
