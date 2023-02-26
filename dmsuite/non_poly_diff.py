@@ -99,7 +99,12 @@ class Fourier(DiffMatrices):
 
 @dataclass(frozen=True)
 class Sinc(DiffMatrices):
-    """Spectral sinc differentiation matrices."""
+    """Spectral sinc differentiation matrices.
+
+    Attributes:
+        degree: polynomial degree. There are degree+1 points.
+        width: width of the domain.
+    """
 
     degree: int
     width: float
@@ -135,23 +140,3 @@ class Sinc(DiffMatrices):
         row = (-1) ** order * col
         row[0] = col[0]
         return toeplitz(col, row)
-
-
-def sincdif(npol: int, mder: int, step: float) -> tuple[NDArray, NDArray]:
-    """sinc differentiation matrices
-
-    Input
-    npol: polynomial order. npol + 1 is the number of points.
-    mder: number of differentiation orders (integer).
-    step: step-size (real, positive)
-
-    Output
-    xxt: vector of nodes
-    ddm: ddm[l, 0:npol, 0:npol] is the l-th order differentiation matrix
-             with l=1..mder
-    """
-    sinc = Sinc(degree=npol, width=step * npol)
-    dmat = np.zeros((mder, sinc.nodes.size, sinc.nodes.size))
-    for order in range(1, mder + 1):
-        dmat[order - 1] = sinc.at_order(order)
-    return sinc.nodes, dmat
