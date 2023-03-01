@@ -28,7 +28,7 @@ from functools import cached_property, lru_cache
 import numpy as np
 from numpy.typing import NDArray
 from scipy.linalg import toeplitz
-from scipy.special import roots_hermite, roots_laguerre
+from scipy.special import roots_laguerre
 
 
 class DiffMatrices(ABC):
@@ -233,46 +233,6 @@ class Chebyshev(DiffMatrices):
     def at_order(self, order: int) -> NDArray:
         assert 0 < order <= self.max_order
         return self._dmat(order)
-
-
-@dataclass(frozen=True)
-class Hermite(DiffMatrices):
-    """Hermite collocation differentation matrices.
-
-    The matrix is constructed by differentiating Hermite interpolants.
-
-    Attributes:
-        degree: Hermite polynomial degree, also the number of nodes.
-    """
-
-    degree: int
-
-    @property
-    def max_order(self) -> int:
-        """Maximum order of derivative."""
-        return self.degree - 1
-
-    @cached_property
-    def nodes(self) -> NDArray:
-        return roots_hermite(self.degree)[0]
-
-    @cached_property
-    def _dmat(self) -> GeneralPoly:
-        x = self.nodes
-        alpha = np.exp(-(x**2) / 2)  # compute Hermite  weights.
-
-        # construct beta(l,j) = d^l/dx^l (alpha(x)/alpha'(x))|x=x_j recursively
-        beta = np.zeros([self.max_order + 1, self.degree])
-        beta[0, :] = np.ones(self.degree)
-        beta[1, :] = -x
-
-        for ell in range(2, self.max_order + 1):
-            beta[ell, :] = -x * beta[ell - 1, :] - (ell - 1) * beta[ell - 2, :]
-
-        return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta[1:, :])
-
-    def at_order(self, order: int) -> NDArray:
-        return self._dmat.at_order(order)
 
 
 @dataclass(frozen=True)
