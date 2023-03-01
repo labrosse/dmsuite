@@ -45,7 +45,7 @@ class DiffMatrices(ABC):
 
 
 @dataclass(frozen=True)
-class GeneralPoly(DiffMatrices):
+class Lagrange(DiffMatrices):
     """General differentiation matrices.
 
     The matrix is constructed by differentiating N-th order Lagrange
@@ -76,8 +76,8 @@ class GeneralPoly(DiffMatrices):
         assert self.weight_derivs.shape[1] == self.nodes.size
 
     @staticmethod
-    def with_unit_weights(nodes: NDArray) -> GeneralPoly:
-        return GeneralPoly(
+    def with_unit_weights(nodes: NDArray) -> Lagrange:
+        return Lagrange(
             nodes,
             weights=np.ones_like(nodes),
             weight_derivs=np.zeros((nodes.size - 1, nodes.size)),
@@ -244,8 +244,8 @@ class Laguerre(DiffMatrices):
 
     The matrix is constructed by differentiating Laguerre interpolants.
 
-    Warning: these differentiation matrices are backed by GeneralPoly and are
-    not stable against a strong stretching with DiffMatOnDomain.
+    Warning: these differentiation matrices are backed by :class:`Lagrange` and
+    are not stable against a strong stretching with DiffMatOnDomain.
 
     Attributes:
         degree: Laguerre polynomial degree. There are degree+1 nodes.
@@ -265,7 +265,7 @@ class Laguerre(DiffMatrices):
         return nodes
 
     @cached_property
-    def _dmat(self) -> GeneralPoly:
+    def _dmat(self) -> Lagrange:
         x = self.nodes
         alpha = np.exp(-x / 2)  # Laguerre weights
 
@@ -275,7 +275,7 @@ class Laguerre(DiffMatrices):
         for ell in range(0, self.max_order):
             beta[ell, :] = pow(-0.5, ell + 1) * d
 
-        return GeneralPoly(at_nodes=x, weights=alpha, weight_derivs=beta)
+        return Lagrange(at_nodes=x, weights=alpha, weight_derivs=beta)
 
     def at_order(self, order: int) -> NDArray:
         return self._dmat.at_order(order)

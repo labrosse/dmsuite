@@ -1,6 +1,6 @@
 import numpy as np
 
-from dmsuite.poly_diff import GeneralPoly
+from dmsuite.poly_diff import Lagrange
 
 
 def test_poldif5() -> None:
@@ -11,7 +11,7 @@ def test_poldif5() -> None:
     tested by the corresponding function.
     """
     expected = np.load("tests/data/poldif1_5.npy")
-    dmat = GeneralPoly.with_unit_weights(nodes=np.arange(0, 1.2, 0.2))
+    dmat = Lagrange.with_unit_weights(nodes=np.arange(0, 1.2, 0.2))
     computed = np.zeros_like(expected)
     for i in range(5):
         computed[i] = dmat.at_order(i + 1)
