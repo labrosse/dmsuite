@@ -54,6 +54,9 @@ class GeneralPoly(DiffMatrices):
     This function is based on code by Rex Fuzzle
     https://github.com/RexFuzzle/Python-Library
 
+    Warning: these differentiation matrices are not stable against a strong
+    stretching with DiffMatOnDomain.
+
     Attributes:
         nodes: position of N distinct arbitrary nodes.
         weights: vector of weight values, evaluated at nodes.
@@ -240,6 +243,9 @@ class Laguerre(DiffMatrices):
     """Laguerre collocation differentiation matrices.
 
     The matrix is constructed by differentiating Laguerre interpolants.
+
+    Warning: these differentiation matrices are backed by GeneralPoly and are
+    not stable against a strong stretching with DiffMatOnDomain.
 
     Attributes:
         degree: Laguerre polynomial degree. There are degree+1 nodes.
