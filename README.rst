@@ -19,19 +19,19 @@ and update dmsuite with the following command::
 
 Some examples are available in the ``examples`` directory. Considering
 for example the case of Chebyshev differentiation matrix, it is first
-setup by
+setup by::
 
     cheb = Chebyshev(degree=NCHEB)
 
 with ``NCHEB`` the degree of polynomials considered. The
-differentiation matrices of degree 1 and 2 are obtained as
+differentiation matrices of degree 1 and 2 are obtained as::
 
     D1 = cheb.at_order(1)
     D2 = cheb.at_order(2)
 
 and so on for larger orders of differentiation. The colocation nodes
 are stored in ``cheb.nodes`` which can used to compute a any function
-at these location, e.g.:
+at these location, e.g.:::
 
     y = np.sin(2 * pi * cheb.nodes)
 
