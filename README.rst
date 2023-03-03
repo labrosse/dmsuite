@@ -39,6 +39,7 @@ First and second order differentiation are then simply obtained as
 ``D1 @ y`` and ``D2 @ y``, respectively. For more complex uses,
 e.g. to compute eigenvectors and eigenvalues of partial differential
 equations refer to
+
 - Labrosse, S., Morison, A., Deguen, R., and
   Alboussière, T. Rayleigh-Bénard convection in a creeping solid with
   a phase change at either or both horizontal boundaries. J. Fluid
