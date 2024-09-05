@@ -22,4 +22,6 @@ The authors describe their library as:
 The port to python was initiated as part of a larger project by ronojoy as https://github.com/ronojoy/pyddx.git
 """
 
-from ._version import __version__, __version_tuple__
+from importlib.metadata import version
+
+__version__ = version("dmsuite")

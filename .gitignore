@@ -5,5 +5,4 @@
 __pycache__/
 
 /build
-/dmsuite/_version.py
 /dmsuite.egg-info/

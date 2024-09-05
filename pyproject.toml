@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61", "setuptools_scm>=7.0"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "dmsuite"
-dynamic = ["version"]
+version = "0.3.0"
 description = "Differentiation matrices"
 readme = "README.rst"
 authors = [
@@ -39,9 +39,6 @@ namespaces = false
 
 [tool.setuptools.package-data]
 dmsuite = ["py.typed"]
-
-[tool.setuptools_scm]
-write_to = "dmsuite/_version.py"
 
 [tool.mypy]
 disallow_untyped_defs = true
