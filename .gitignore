@@ -3,6 +3,3 @@
 /uv.lock
 
 __pycache__/
-
-/build
-/dmsuite.egg-info/

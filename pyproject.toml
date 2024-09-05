@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
 [project]
 name = "dmsuite"
@@ -33,12 +33,8 @@ dependencies = [
     "scipy>=1.13",
 ]
 
-[tool.setuptools.packages.find]
+[tool.hatch.build.targets.sdist]
 include = ["dmsuite"]
-namespaces = false
-
-[tool.setuptools.package-data]
-dmsuite = ["py.typed"]
 
 [tool.mypy]
 disallow_untyped_defs = true
