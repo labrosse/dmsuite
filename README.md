@@ -45,10 +45,14 @@ First and second order differentiation are then simply obtained as
 e.g. to compute eigenvectors and eigenvalues of partial differential
 equations refer to
 
-- Labrosse, S., Morison, A., Deguen, R., and
-  Alboussière, T. Rayleigh-Bénard convection in a creeping solid with
-  a phase change at either or both horizontal boundaries. J. Fluid
-  Mech., 846:5–36, 2018.
-- Morison, A., Labrosse, S., Deguen, R., and Alboussière, T. Timescale
-  of overturn in a magma ocean cumulate. Earth Planet. Sci. Lett.,
-  516:25 – 36, 2019.
+- Labrosse S, Morison A, Deguen R, and Alboussière T. _Rayleigh-Bénard
+  convection in a creeping solid with a phase change at either or both
+  horizontal boundaries._ J. Fluid Mech., 2018.
+  [DOI](https://doi.org/10.1017/jfm.2018.258).
+- Morison A, Labrosse S, Deguen R, and Alboussière T. _Timescale of overturn in
+  a magma ocean cumulate._ Earth Planet. Sci. Lett., 2019.
+  [DOI](http://doi.org/10.1016/j.epsl.2019.03.037).
+- Morison A, Labrosse S, Deguen R, and Alboussière T. _Onset of thermal
+  convection in a solid spherical shell with melting at either or both
+  boundaries._ Geophys. J. Int., 2024.
+  [DOI](https://doi.org/10.1093/gji/ggae208).
