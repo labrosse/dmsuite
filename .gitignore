@@ -1,10 +1,9 @@
 *.swp
+/.coverage
+/uv.lock
 
 __pycache__/
 
 /build
 /dmsuite/_version.py
 /dmsuite.egg-info/
-
-.pytest_cache/
-.tox/
