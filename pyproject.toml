@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.25"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.7.20"]
+build-backend = "uv_build"
 
 [project]
 name = "dmsuite"
@@ -34,8 +34,8 @@ dependencies = [
     "scipy>=1.13",
 ]
 
-[tool.hatch.build.targets.sdist]
-include = ["dmsuite"]
+[tool.uv.build-backend]
+module-root = ""
 
 [tool.mypy]
 disallow_untyped_defs = true
