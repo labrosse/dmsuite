@@ -15,7 +15,8 @@ maintainers = [
     {name = "Adrien Morison", email = "adrien.morison@gmail.com"},
     {name = "Stéphane Labrosse"},
 ]
-license = {file = "LICENSE"}
+license = "GPL-2.0-only"
+license-files = ["LICENSE"]
 urls = {homepage = "https://github.com/labrosse/dmsuite"}
 classifiers=[
     "Development Status :: 3 - Alpha",
