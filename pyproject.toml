@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "dmsuite"
 version = "0.3.0"
 description = "Differentiation matrices"
-readme = "README.rst"
+readme = "README.md"
 authors = [
     {name = "Adrien Morison", email = "adrien.morison@gmail.com"},
     {name = "Stéphane Labrosse"},
